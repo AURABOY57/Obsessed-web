@@ -92,7 +92,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
 
   const getWhatsAppCheckoutUrl = (customerName?: string) => {
-    const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "5493510000000";
+    const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "5493548550965";
     return buildWhatsAppLink({
       phone,
       products: items.map((item) => ({

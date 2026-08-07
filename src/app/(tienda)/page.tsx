@@ -71,7 +71,7 @@ export default async function StoreHomePage() {
     console.warn("[STORE_HOME]: Usando productos demo mientras se conecta la BD.", error);
   }
 
-  const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "5493510000000";
+  const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "5493548550965";
   const whatsappConsultUrl = `https://wa.me/${phone}?text=${encodeURIComponent(
     "Hola obsessed.cba! Quisiera consultar por mates y accesorios."
   )}`;

@@ -7,7 +7,7 @@ export function FloatingWhatsAppButton() {
   const pathname = usePathname();
   const isHome = pathname === "/";
 
-  const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "5493510000000";
+  const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "5493548550965";
   const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(
     "Hola obsessed.cba! Quisiera hacerles una consulta."
   )}`;

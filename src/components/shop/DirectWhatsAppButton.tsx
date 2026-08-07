@@ -20,7 +20,7 @@ export function DirectWhatsAppButton({
   className = "",
   label = "Pedir por WhatsApp",
 }: DirectWhatsAppButtonProps) {
-  const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "5493510000000";
+  const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "5493548550965";
 
   const handleDirectWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
