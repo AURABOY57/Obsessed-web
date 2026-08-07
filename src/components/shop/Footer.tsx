@@ -36,13 +36,13 @@ export function Footer() {
             </h4>
             <ul className="space-y-1.5 text-xs font-mono uppercase tracking-wider text-brand-muted">
               <li>
-                <Link href="/productos" className="hover:text-brand-black transition-colors">
-                  Productos
+                <Link href="/" className="hover:text-brand-black transition-colors">
+                  Inicio
                 </Link>
               </li>
               <li>
-                <Link href="/admin" className="hover:text-brand-black transition-colors">
-                  Acceso Panel Admin
+                <Link href="/productos" className="hover:text-brand-black transition-colors">
+                  Productos
                 </Link>
               </li>
             </ul>

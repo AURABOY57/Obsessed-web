@@ -58,10 +58,9 @@ export function Navbar() {
             href="/admin"
             title="Panel de Administración"
             aria-label="Panel de Administración"
-            className="text-brand-muted hover:text-brand-black p-1 sm:p-1.5 transition-colors flex items-center gap-1 text-[10px] sm:text-[11px] font-mono uppercase"
+            className="text-brand-muted hover:text-brand-black p-1.5 sm:p-2 transition-colors flex items-center justify-center hover:bg-neutral-100/80"
           >
-            <Lock size={13} className="sm:w-3.5 sm:h-3.5" />
-            <span className="hidden sm:inline">Admin</span>
+            <Lock className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
           </Link>
 
           {/* Botón Carrito */}
