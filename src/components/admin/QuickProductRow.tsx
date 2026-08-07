@@ -26,9 +26,15 @@ interface QuickProductRowProps {
     subCategory?: string | null;
     variants?: any;
   };
+  isSelected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
-export function QuickProductRow({ product }: QuickProductRowProps) {
+export function QuickProductRow({
+  product,
+  isSelected = false,
+  onToggleSelect,
+}: QuickProductRowProps) {
   const [price, setPrice] = useState(product.price);
   const [stock, setStock] = useState(product.stock);
   const [isActive, setIsActive] = useState(product.isActive);
@@ -79,14 +85,26 @@ export function QuickProductRow({ product }: QuickProductRowProps) {
 
   return (
     <div
-      className={`border bg-brand-white p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
-        isCriticalStock
+      className={`border p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
+        isSelected
+          ? "bg-neutral-100/90 border-brand-black shadow-sm"
+          : isCriticalStock
           ? "border-amber-400/80 hover:border-amber-600 bg-amber-50/20"
-          : "border-brand-border hover:border-brand-black"
+          : "border-brand-border hover:border-brand-black bg-brand-white"
       }`}
     >
-      {/* Información del Producto */}
+      {/* Información del Producto con Checkbox */}
       <div className="flex items-center gap-3 min-w-0">
+        {/* Cuadradito de Selección */}
+        <label className="flex items-center justify-center cursor-pointer p-1">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onToggleSelect && onToggleSelect(product.id)}
+            className="w-4 h-4 rounded-none border border-neutral-400 accent-black cursor-pointer"
+          />
+        </label>
+
         <div className="relative w-14 h-14 border border-brand-border flex-shrink-0 bg-brand-surface">
           <Image
             src={product.imageUrl}

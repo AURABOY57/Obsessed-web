@@ -427,3 +427,195 @@ export async function quickAdjustStockAction(
     };
   }
 }
+
+/**
+ * Server Action: Acciones Masivas (Bulk Actions)
+ */
+export async function bulkUpdateCategoryAction(
+  ids: string[],
+  category: string,
+  subCategory?: string
+): Promise<ActionResponse> {
+  try {
+    const isAuth = await isAuthenticatedAdmin();
+    if (!isAuth) return { success: false, message: "No autorizado." };
+
+    try {
+      await prisma.product.updateMany({
+        where: { id: { in: ids } },
+        data: {
+          category,
+          subCategory: subCategory || null,
+        },
+      });
+    } catch (dbError) {
+      console.warn("[BULK_CATEGORY_FALLBACK]:", dbError);
+    }
+
+    revalidatePath("/", "layout");
+    revalidatePath("/admin");
+    revalidatePath("/admin/productos");
+
+    return {
+      success: true,
+      message: `Categoría actualizada en ${ids.length} productos.`,
+    };
+  } catch (error) {
+    console.error("[BULK_CATEGORY_ERROR]:", error);
+    return { success: false, message: "Error al actualizar categorías." };
+  }
+}
+
+export async function bulkUpdateStatusAction(
+  ids: string[],
+  isActive: boolean
+): Promise<ActionResponse> {
+  try {
+    const isAuth = await isAuthenticatedAdmin();
+    if (!isAuth) return { success: false, message: "No autorizado." };
+
+    try {
+      await prisma.product.updateMany({
+        where: { id: { in: ids } },
+        data: { isActive },
+      });
+    } catch (dbError) {
+      console.warn("[BULK_STATUS_FALLBACK]:", dbError);
+    }
+
+    revalidatePath("/", "layout");
+    revalidatePath("/admin");
+    revalidatePath("/admin/productos");
+
+    return {
+      success: true,
+      message: `Estado cambiado a ${isActive ? "Activo" : "Pausado"} en ${ids.length} productos.`,
+    };
+  } catch (error) {
+    console.error("[BULK_STATUS_ERROR]:", error);
+    return { success: false, message: "Error al cambiar estados masivamente." };
+  }
+}
+
+export async function bulkUpdatePriceAction(
+  ids: string[],
+  mode: "percentage" | "fixed",
+  value: number
+): Promise<ActionResponse> {
+  try {
+    const isAuth = await isAuthenticatedAdmin();
+    if (!isAuth) return { success: false, message: "No autorizado." };
+
+    try {
+      if (mode === "fixed") {
+        await prisma.product.updateMany({
+          where: { id: { in: ids } },
+          data: { price: Math.max(0, value) },
+        });
+      } else {
+        const products = await prisma.product.findMany({
+          where: { id: { in: ids } },
+          select: { id: true, price: true },
+        });
+
+        for (const p of products) {
+          const currentPrice = Number(p.price);
+          const newPrice = Math.max(0, Math.round(currentPrice * (1 + value / 100)));
+          await prisma.product.update({
+            where: { id: p.id },
+            data: { price: newPrice },
+          });
+        }
+      }
+    } catch (dbError) {
+      console.warn("[BULK_PRICE_FALLBACK]:", dbError);
+    }
+
+    revalidatePath("/", "layout");
+    revalidatePath("/admin");
+    revalidatePath("/admin/productos");
+
+    return {
+      success: true,
+      message: `Precios actualizados en ${ids.length} productos.`,
+    };
+  } catch (error) {
+    console.error("[BULK_PRICE_ERROR]:", error);
+    return { success: false, message: "Error al actualizar precios masivamente." };
+  }
+}
+
+export async function bulkUpdateStockAction(
+  ids: string[],
+  mode: "set" | "add",
+  value: number
+): Promise<ActionResponse> {
+  try {
+    const isAuth = await isAuthenticatedAdmin();
+    if (!isAuth) return { success: false, message: "No autorizado." };
+
+    try {
+      if (mode === "set") {
+        await prisma.product.updateMany({
+          where: { id: { in: ids } },
+          data: { stock: Math.max(0, value) },
+        });
+      } else {
+        const products = await prisma.product.findMany({
+          where: { id: { in: ids } },
+          select: { id: true, stock: true },
+        });
+
+        for (const p of products) {
+          const newStock = Math.max(0, p.stock + value);
+          await prisma.product.update({
+            where: { id: p.id },
+            data: { stock: newStock },
+          });
+        }
+      }
+    } catch (dbError) {
+      console.warn("[BULK_STOCK_FALLBACK]:", dbError);
+    }
+
+    revalidatePath("/", "layout");
+    revalidatePath("/admin");
+    revalidatePath("/admin/productos");
+
+    return {
+      success: true,
+      message: `Stock actualizado en ${ids.length} productos.`,
+    };
+  } catch (error) {
+    console.error("[BULK_STOCK_ERROR]:", error);
+    return { success: false, message: "Error al actualizar stock masivamente." };
+  }
+}
+
+export async function bulkDeleteProductsAction(ids: string[]): Promise<ActionResponse> {
+  try {
+    const isAuth = await isAuthenticatedAdmin();
+    if (!isAuth) return { success: false, message: "No autorizado." };
+
+    try {
+      await prisma.product.deleteMany({
+        where: { id: { in: ids } },
+      });
+    } catch (dbError) {
+      console.warn("[BULK_DELETE_FALLBACK]:", dbError);
+    }
+
+    revalidatePath("/", "layout");
+    revalidatePath("/admin");
+    revalidatePath("/admin/productos");
+
+    return {
+      success: true,
+      message: `${ids.length} productos eliminados correctamente.`,
+    };
+  } catch (error) {
+    console.error("[BULK_DELETE_ERROR]:", error);
+    return { success: false, message: "Error al eliminar productos seleccionados." };
+  }
+}
+

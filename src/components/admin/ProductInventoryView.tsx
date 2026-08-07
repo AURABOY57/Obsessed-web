@@ -3,7 +3,8 @@
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { QuickProductRow } from "@/components/admin/QuickProductRow";
-import { Search, PlusCircle, AlertTriangle, Package, Filter, X } from "lucide-react";
+import { BulkActionBar } from "@/components/admin/BulkActionBar";
+import { Search, PlusCircle, AlertTriangle, Package, Filter, X, CheckSquare, Square } from "lucide-react";
 
 export interface InventoryProduct {
   id: string;
@@ -38,6 +39,7 @@ export function ProductInventoryView({ initialProducts, initialFilter }: Product
     initialFilter === "low-stock" ? "STOCK BAJO (< 2)" : "TODOS"
   );
   const [selectedSubfilter, setSelectedSubfilter] = useState<string>("TODOS");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Conteo por categoría
   const categoryCounts = useMemo(() => {
@@ -89,8 +91,31 @@ export function ProductInventoryView({ initialProducts, initialFilter }: Product
 
   const activeSubfilters = SUBFILTERS_BY_CATEGORY[selectedCategory];
 
+  // Manejo de Selección Múltiple
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const isAllFilteredSelected =
+    filteredProducts.length > 0 &&
+    filteredProducts.every((p) => selectedIds.includes(p.id));
+
+  const handleToggleSelectAll = () => {
+    if (isAllFilteredSelected) {
+      // Deseleccionar los visibles
+      const filteredIds = new Set(filteredProducts.map((p) => p.id));
+      setSelectedIds((prev) => prev.filter((id) => !filteredIds.has(id)));
+    } else {
+      // Seleccionar todos los visibles
+      const filteredIds = filteredProducts.map((p) => p.id);
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...filteredIds])));
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
       {/* Encabezado y Acción Primaria */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brand-border pb-4">
         <div>
@@ -99,6 +124,11 @@ export function ProductInventoryView({ initialProducts, initialFilter }: Product
           </h1>
           <p className="text-xs font-mono text-brand-muted mt-1">
             Total en catálogo: {initialProducts.length} productos | {filteredProducts.length} visibles
+            {selectedIds.length > 0 && (
+              <span className="text-brand-black font-bold ml-2">
+                ({selectedIds.length} seleccionados)
+              </span>
+            )}
           </p>
         </div>
 
@@ -205,7 +235,33 @@ export function ProductInventoryView({ initialProducts, initialFilter }: Product
         </div>
       )}
 
-      {/* Listado de Productos con Ajuste de Stock en 1 Clic */}
+      {/* Barra de Selección Masiva Rápida en Cabecera */}
+      {filteredProducts.length > 0 && (
+        <div className="flex items-center justify-between px-3 py-2 bg-brand-surface border border-brand-border text-xs font-mono">
+          <label className="flex items-center gap-2 cursor-pointer select-none text-brand-black">
+            <input
+              type="checkbox"
+              checked={isAllFilteredSelected}
+              onChange={handleToggleSelectAll}
+              className="w-4 h-4 rounded-none border border-neutral-400 accent-black cursor-pointer"
+            />
+            <span className="text-[11px] font-semibold uppercase tracking-wider">
+              {isAllFilteredSelected ? "Deseleccionar todos" : "Seleccionar todos los visibles"} ({filteredProducts.length})
+            </span>
+          </label>
+
+          {selectedIds.length > 0 && (
+            <button
+              onClick={() => setSelectedIds([])}
+              className="text-[11px] text-brand-muted hover:text-brand-black underline uppercase"
+            >
+              Limpiar selección ({selectedIds.length})
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Listado de Productos con Checkboxes y Ajuste de Stock en 1 Clic */}
       {filteredProducts.length === 0 ? (
         <div className="border border-dashed border-brand-border p-12 text-center space-y-3">
           <Package size={32} className="mx-auto text-brand-muted" />
@@ -226,10 +282,25 @@ export function ProductInventoryView({ initialProducts, initialFilter }: Product
       ) : (
         <div className="space-y-2">
           {filteredProducts.map((product) => (
-            <QuickProductRow key={product.id} product={product} />
+            <QuickProductRow
+              key={product.id}
+              product={product}
+              isSelected={selectedIds.includes(product.id)}
+              onToggleSelect={handleToggleSelect}
+            />
           ))}
         </div>
       )}
+
+      {/* Barra Flotante de Acciones Masivas (Sticky Bottom Bar) */}
+      <BulkActionBar
+        selectedIds={selectedIds}
+        onClearSelection={() => setSelectedIds([])}
+        onActionComplete={() => {
+          setSelectedIds([]);
+        }}
+      />
     </div>
   );
 }
+
