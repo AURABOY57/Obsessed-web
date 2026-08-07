@@ -5,44 +5,93 @@ import { Package, PlusCircle, AlertCircle, ShoppingBag } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
+interface AdminDashboardProduct {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  stock: number;
+  imageUrl: string;
+  isActive: boolean;
+  category?: string | null;
+  subCategory?: string | null;
+}
+
+const DEMO_PRODUCTS: AdminDashboardProduct[] = [
+  {
+    id: "demo-1",
+    name: "Mate Imperial Premium Noir",
+    slug: "mate-imperial-premium-noir",
+    price: 48000,
+    stock: 8,
+    imageUrl: "/images/products/mate-imperial-noir.png",
+    isActive: true,
+    category: "Mates",
+    subCategory: "Imperial",
+  },
+  {
+    id: "demo-2",
+    name: "Mate Torpedo Cuero Seleccionado",
+    slug: "mate-torpedo-cuero-seleccionado",
+    price: 42000,
+    stock: 6,
+    imageUrl: "/images/products/mate-torpedo-cuero.png",
+    isActive: true,
+    category: "Mates",
+    subCategory: "Torpedo",
+  },
+  {
+    id: "demo-3",
+    name: "Termo Obsidian Matte 1L",
+    slug: "termo-obsidian-matte-1l",
+    price: 68000,
+    stock: 10,
+    imageUrl: "/images/products/termo-obsidian-black.png",
+    isActive: true,
+    category: "Termos",
+    subCategory: "Acero Inox",
+  },
+  {
+    id: "demo-4",
+    name: "Bombilla Pico de Loro Alpaca Cincelada",
+    slug: "bombilla-pico-de-loro-alpaca-cincelada",
+    price: 18500,
+    stock: 15,
+    imageUrl: "/images/products/bombilla-alpaca-pico.png",
+    isActive: true,
+    category: "Bombillas",
+    subCategory: "Alpaca Maciza",
+  },
+];
+
 export default async function AdminDashboardPage() {
-  // Obtener datos directamente en Server Component
-  let totalProducts = 0;
-  let activeProducts = 0;
-  let lowStockProducts = 0;
-  let recentProducts: Array<{
-    id: string;
-    name: string;
-    slug: string;
-    price: number;
-    stock: number;
-    imageUrl: string;
-    isActive: boolean;
-    category: string | null;
-  }> = [];
+  let allProducts: AdminDashboardProduct[] = DEMO_PRODUCTS;
 
   try {
     const products = await prisma.product.findMany({
       orderBy: { createdAt: "desc" },
     });
 
-    totalProducts = products.length;
-    activeProducts = products.filter((p) => p.isActive).length;
-    lowStockProducts = products.filter((p) => p.stock <= 2).length;
-
-    recentProducts = products.slice(0, 5).map((p) => ({
-      id: p.id,
-      name: p.name,
-      slug: p.slug,
-      price: Number(p.price),
-      stock: p.stock,
-      imageUrl: p.imageUrl,
-      isActive: p.isActive,
-      category: p.category,
-    }));
+    if (products.length > 0) {
+      allProducts = products.map((p) => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        price: Number(p.price),
+        stock: p.stock,
+        imageUrl: p.imageUrl,
+        isActive: p.isActive,
+        category: p.category,
+      }));
+    }
   } catch (error) {
-    console.error("[DASHBOARD_DB_ERROR]:", error);
+    console.warn("[DASHBOARD_DB_FALLBACK]:", error);
   }
+
+  const totalProducts = allProducts.length;
+  const activeProducts = allProducts.filter((p) => p.isActive).length;
+  const lowStockProducts = allProducts.filter((p) => p.stock <= 2).length;
+  const recentProducts = allProducts.slice(0, 5);
 
   return (
     <div className="space-y-8">

@@ -17,7 +17,8 @@ interface QuickProductRowProps {
     stock: number;
     imageUrl: string;
     isActive: boolean;
-    category: string | null;
+    category?: string | null;
+    subCategory?: string | null;
   };
 }
 
