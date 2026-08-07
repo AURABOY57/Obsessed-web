@@ -32,8 +32,8 @@ export function ImageUpload({
       setIsUploading(true);
       setErrorMessage(null);
 
-      // Si aún no están configuradas las variables reales, usar fallback seguro para preview
-      if (!presetName || !cloudName || presetName === "obsessed_preset") {
+      // Si aún no están configuradas las variables, usar fallback local
+      if (!presetName || !cloudName) {
         const localUrl = URL.createObjectURL(file);
         setPreview(localUrl);
         onChange(localUrl);
