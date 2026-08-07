@@ -1,15 +1,24 @@
 "use client";
 
 import React from "react";
+import { usePathname } from "next/navigation";
 
 export function FloatingWhatsAppButton() {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+
   const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "5493510000000";
   const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(
     "Hola obsessed.cba! Quisiera hacerles una consulta."
   )}`;
 
   return (
-    <aside aria-label="Contacto de WhatsApp" className="fixed bottom-6 right-6 z-50 flex items-center justify-center">
+    <aside
+      aria-label="Contacto de WhatsApp"
+      className={`fixed bottom-6 right-6 z-50 items-center justify-center ${
+        isHome ? "flex" : "hidden md:flex"
+      }`}
+    >
       {/* Anillo de pulso/parpadeo sutil */}
       <span className="absolute inline-flex h-12 w-12 sm:h-14 sm:w-14 animate-ping rounded-full bg-emerald-500/30 opacity-75 pointer-events-none" />
 
