@@ -14,6 +14,7 @@ const ProductSchema = z.object({
   slug: z.string().optional(),
   description: z.string().optional().default(""),
   category: z.string().optional().default("General"),
+  subCategory: z.string().optional().default(""),
   price: z
     .coerce
     .number()
@@ -69,6 +70,7 @@ export async function createProductAction(
             name: formData.get("name"),
             description: formData.get("description") || undefined,
             category: formData.get("category") || "General",
+            subCategory: formData.get("subCategory") || undefined,
             price: formData.get("price"),
             stock: formData.get("stock"),
             imageUrl: formData.get("imageUrl"),
@@ -86,7 +88,7 @@ export async function createProductAction(
       };
     }
 
-    const { name, description, category, price, stock, imageUrl, images, isActive } =
+    const { name, description, category, subCategory, price, stock, imageUrl, images, isActive } =
       validated.data;
 
     let slug = slugify(name);
@@ -105,6 +107,7 @@ export async function createProductAction(
         slug,
         description,
         category,
+        subCategory: subCategory || null,
         price,
         stock,
         imageUrl,
@@ -148,6 +151,7 @@ export async function updateProductAction(
             name: formData.get("name"),
             description: formData.get("description") || undefined,
             category: formData.get("category") || "General",
+            subCategory: formData.get("subCategory") || undefined,
             price: formData.get("price"),
             stock: formData.get("stock"),
             imageUrl: formData.get("imageUrl"),

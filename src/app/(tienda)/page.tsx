@@ -17,6 +17,7 @@ const DEMO_PRODUCTS = [
     stock: 8,
     imageUrl: "/images/products/mate-imperial-noir.png",
     category: "Mates",
+    subCategory: "Imperial",
   },
   {
     id: "demo-2",
@@ -26,6 +27,7 @@ const DEMO_PRODUCTS = [
     stock: 6,
     imageUrl: "/images/products/mate-torpedo-cuero.png",
     category: "Mates",
+    subCategory: "Torpedo",
   },
   {
     id: "demo-3",
@@ -35,6 +37,7 @@ const DEMO_PRODUCTS = [
     stock: 10,
     imageUrl: "/images/products/termo-obsidian-black.png",
     category: "Termos",
+    subCategory: "Acero Inox",
   },
   {
     id: "demo-4",
@@ -44,6 +47,7 @@ const DEMO_PRODUCTS = [
     stock: 15,
     imageUrl: "/images/products/bombilla-alpaca-pico.png",
     category: "Bombillas",
+    subCategory: "Alpaca Maciza",
   },
 ];
 
@@ -65,6 +69,7 @@ export default async function StoreHomePage() {
         stock: p.stock,
         imageUrl: p.imageUrl,
         category: p.category || "Mates",
+        subCategory: p.subCategory || null,
       }));
     }
   } catch (error) {

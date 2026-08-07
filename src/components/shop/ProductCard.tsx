@@ -14,6 +14,7 @@ interface ProductCardProps {
     stock: number;
     imageUrl: string;
     category?: string | null;
+    subCategory?: string | null;
   };
 }
 
@@ -43,10 +44,16 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {/* Categoría Sutil */}
-        {product.category && (
-          <div className="absolute bottom-2 left-2 bg-brand-white/90 backdrop-blur-xs text-brand-black text-[9px] font-mono uppercase tracking-widest px-2 py-0.5 border border-brand-border">
-            {product.category}
+        {/* Categoría y Subcategoría Sutil */}
+        {(product.category || product.subCategory) && (
+          <div className="absolute bottom-2 left-2 bg-brand-white/90 backdrop-blur-xs text-brand-black text-[9px] font-mono uppercase tracking-widest px-2 py-0.5 border border-brand-border flex items-center gap-1">
+            <span>{product.category || "General"}</span>
+            {product.subCategory && (
+              <>
+                <span className="text-brand-muted">•</span>
+                <span className="text-brand-muted">{product.subCategory}</span>
+              </>
+            )}
           </div>
         )}
       </Link>

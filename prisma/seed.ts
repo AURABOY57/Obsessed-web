@@ -12,6 +12,7 @@ const SEED_PRODUCTS = [
     stock: 8,
     imageUrl: "/images/products/mate-imperial-noir.png",
     category: "Mates",
+    subCategory: "Imperial",
     isActive: true,
   },
   {
@@ -23,6 +24,7 @@ const SEED_PRODUCTS = [
     stock: 6,
     imageUrl: "/images/products/mate-torpedo-cuero.png",
     category: "Mates",
+    subCategory: "Torpedo",
     isActive: true,
   },
   {
@@ -34,6 +36,7 @@ const SEED_PRODUCTS = [
     stock: 10,
     imageUrl: "/images/products/termo-obsidian-black.png",
     category: "Termos",
+    subCategory: "Acero Inox",
     isActive: true,
   },
   {
@@ -45,6 +48,7 @@ const SEED_PRODUCTS = [
     stock: 15,
     imageUrl: "/images/products/bombilla-alpaca-pico.png",
     category: "Bombillas",
+    subCategory: "Alpaca Maciza",
     isActive: true,
   },
 ];

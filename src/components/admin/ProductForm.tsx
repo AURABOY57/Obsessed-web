@@ -13,6 +13,7 @@ interface ProductFormProps {
     name: string;
     description: string | null;
     category: string | null;
+    subCategory?: string | null;
     price: number | string;
     stock: number;
     imageUrl: string;
@@ -26,7 +27,8 @@ export function ProductForm({ initialData }: ProductFormProps) {
 
   const [name, setName] = useState(initialData?.name || "");
   const [description, setDescription] = useState(initialData?.description || "");
-  const [category, setCategory] = useState(initialData?.category || "Indumentaria");
+  const [category, setCategory] = useState(initialData?.category || "Mates");
+  const [subCategory, setSubCategory] = useState(initialData?.subCategory || "");
   const [price, setPrice] = useState(initialData?.price ? String(initialData.price) : "");
   const [stock, setStock] = useState(initialData?.stock !== undefined ? String(initialData.stock) : "1");
   const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || "");
@@ -52,6 +54,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
       name,
       description,
       category,
+      subCategory,
       price: Number(price),
       stock: Number(stock),
       imageUrl,
@@ -131,13 +134,22 @@ export function ProductForm({ initialData }: ProductFormProps) {
           />
         </div>
 
-        <Input
-          label="Categoría"
-          placeholder="Ej: Mates, Bombillas, Termos, Accesorios"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          disabled={isLoading}
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Input
+            label="Categoría Principal"
+            placeholder="Ej: Mates, Bombillas, Termos, Accesorios"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            disabled={isLoading}
+          />
+          <Input
+            label="Subcategoría (Opcional)"
+            placeholder="Ej: Imperial, Torpedo, Camionero, Alpaca"
+            value={subCategory}
+            onChange={(e) => setSubCategory(e.target.value)}
+            disabled={isLoading}
+          />
+        </div>
 
         <div className="space-y-1.5">
           <label className="block text-xs font-mono uppercase tracking-widest text-brand-black">

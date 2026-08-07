@@ -21,6 +21,7 @@ export interface ProductItem {
   stock: number;
   imageUrl: string;
   category?: string | null;
+  subCategory?: string | null;
 }
 
 interface CatalogViewProps {
