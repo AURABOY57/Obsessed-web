@@ -13,6 +13,7 @@ interface AddToCartButtonProps {
     imageUrl: string;
     stock: number;
   };
+  selectedVariant?: string;
   quantity?: number;
   variant?: "primary" | "outline";
   className?: string;
@@ -20,6 +21,7 @@ interface AddToCartButtonProps {
 
 export function AddToCartButton({
   product,
+  selectedVariant,
   quantity = 1,
   variant = "outline",
   className = "",
@@ -32,7 +34,13 @@ export function AddToCartButton({
     e.stopPropagation();
     if (product.stock <= 0) return;
 
-    addItem(product, quantity);
+    addItem(
+      {
+        ...product,
+        variantName: selectedVariant,
+      },
+      quantity
+    );
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   };

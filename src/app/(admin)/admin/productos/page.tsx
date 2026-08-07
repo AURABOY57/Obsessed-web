@@ -1,23 +1,10 @@
-import Link from "next/link";
+import React from "react";
 import { prisma } from "@/lib/prisma";
-import { QuickProductRow } from "@/components/admin/QuickProductRow";
-import { PlusCircle } from "lucide-react";
+import { ProductInventoryView, InventoryProduct } from "@/components/admin/ProductInventoryView";
 
 export const dynamic = "force-dynamic";
 
-interface AdminProductItem {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  stock: number;
-  imageUrl: string;
-  isActive: boolean;
-  category?: string | null;
-  subCategory?: string | null;
-}
-
-const DEMO_PRODUCTS: AdminProductItem[] = [
+const DEMO_PRODUCTS: InventoryProduct[] = [
   {
     id: "demo-1",
     name: "Mate Imperial Premium Noir",
@@ -28,24 +15,26 @@ const DEMO_PRODUCTS: AdminProductItem[] = [
     isActive: true,
     category: "Mates",
     subCategory: "Imperial",
+    variants: [{ name: "Virola", options: ["Lisa", "Cincelada"] }],
   },
   {
     id: "demo-2",
     name: "Mate Torpedo Cuero Seleccionado",
     slug: "mate-torpedo-cuero-seleccionado",
     price: 42000,
-    stock: 6,
+    stock: 1, // Alerta stock bajo (< 2)
     imageUrl: "/images/products/mate-torpedo-cuero.png",
     isActive: true,
     category: "Mates",
     subCategory: "Torpedo",
+    variants: [{ name: "Color", options: ["Negro", "Marrón"] }],
   },
   {
     id: "demo-3",
     name: "Termo Obsidian Matte 1L",
     slug: "termo-obsidian-matte-1l",
     price: 68000,
-    stock: 10,
+    stock: 0, // Alerta stock bajo (< 2)
     imageUrl: "/images/products/termo-obsidian-black.png",
     isActive: true,
     category: "Termos",
@@ -60,12 +49,18 @@ const DEMO_PRODUCTS: AdminProductItem[] = [
     imageUrl: "/images/products/bombilla-alpaca-pico.png",
     isActive: true,
     category: "Bombillas",
-    subCategory: "Alpaca Maciza",
+    subCategory: "Alpaca",
   },
 ];
 
-export default async function AdminProductsPage() {
-  let products: AdminProductItem[] = DEMO_PRODUCTS;
+interface AdminProductsPageProps {
+  searchParams?: {
+    filter?: string;
+  };
+}
+
+export default async function AdminProductsPage({ searchParams }: AdminProductsPageProps) {
+  let products: InventoryProduct[] = DEMO_PRODUCTS;
 
   try {
     const data = await prisma.product.findMany({
@@ -82,6 +77,8 @@ export default async function AdminProductsPage() {
         imageUrl: p.imageUrl,
         isActive: p.isActive,
         category: p.category,
+        subCategory: p.subCategory,
+        variants: p.variants,
       }));
     }
   } catch (err) {
@@ -89,45 +86,9 @@ export default async function AdminProductsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brand-border pb-4">
-        <div>
-          <h1 className="text-xl font-bold uppercase tracking-widest font-mono text-brand-black">
-            Inventario de Productos
-          </h1>
-          <p className="text-xs font-mono text-brand-muted mt-1">
-            Total: {products.length} productos registrados
-          </p>
-        </div>
-
-        <Link
-          href="/admin/productos/nuevo"
-          className="inline-flex items-center justify-center gap-2 bg-brand-black text-brand-white px-4 py-2 text-xs font-mono uppercase tracking-widest hover:bg-neutral-800 transition-colors border border-brand-black"
-        >
-          <PlusCircle size={14} />
-          <span>+ Nuevo Producto</span>
-        </Link>
-      </div>
-
-      {products.length === 0 ? (
-        <div className="border border-dashed border-brand-border p-12 text-center space-y-3">
-          <p className="text-xs font-mono text-brand-muted">
-            Aún no tienes productos creados.
-          </p>
-          <Link
-            href="/admin/productos/nuevo"
-            className="inline-block text-xs font-mono uppercase tracking-wider text-brand-black underline"
-          >
-            Agregar el primer producto
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {products.map((product) => (
-            <QuickProductRow key={product.id} product={product} />
-          ))}
-        </div>
-      )}
-    </div>
+    <ProductInventoryView
+      initialProducts={products}
+      initialFilter={searchParams?.filter}
+    />
   );
 }

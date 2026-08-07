@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutAdminAction } from "@/actions/auth-actions";
-import { LayoutDashboard, Package, PlusCircle, ExternalLink, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, ClipboardList, ExternalLink, LogOut } from "lucide-react";
 
 export function AdminNav() {
   const pathname = usePathname();
 
   const links = [
-    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/admin/productos", label: "Productos", icon: Package },
-    { href: "/admin/productos/nuevo", label: "+ Nuevo", icon: PlusCircle },
+    { href: "/admin", label: "Resumen", icon: LayoutDashboard },
+    { href: "/admin/productos", label: "Inventario", icon: Package },
+    { href: "/admin/pedidos", label: "Pedidos", icon: ClipboardList },
   ];
 
   return (

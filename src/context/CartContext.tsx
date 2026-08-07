@@ -11,6 +11,7 @@ export interface CartItem {
   imageUrl: string;
   quantity: number;
   stock: number;
+  variantName?: string;
 }
 
 interface CartContextType {
@@ -18,12 +19,12 @@ interface CartContextType {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   addItem: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
-  removeItem: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
+  removeItem: (id: string, variantName?: string) => void;
+  updateQuantity: (id: string, quantity: number, variantName?: string) => void;
   clearCart: () => void;
   total: number;
   totalItems: number;
-  getWhatsAppCheckoutUrl: (customerName?: string) => string;
+  getWhatsAppCheckoutUrl: (customerName?: string, orderNumber?: string) => string;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -56,11 +57,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = (product: Omit<CartItem, "quantity">, quantity: number = 1) => {
     setItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
+      const existing = prev.find(
+        (item) => item.id === product.id && item.variantName === product.variantName
+      );
       if (existing) {
         const nextQty = Math.min(existing.quantity + quantity, product.stock);
         return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: nextQty } : item
+          item.id === product.id && item.variantName === product.variantName
+            ? { ...item, quantity: nextQty }
+            : item
         );
       }
       return [...prev, { ...product, quantity: Math.min(quantity, product.stock) }];
@@ -68,18 +73,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setIsOpen(true);
   };
 
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+  const removeItem = (id: string, variantName?: string) => {
+    setItems((prev) =>
+      prev.filter((item) => !(item.id === id && item.variantName === variantName))
+    );
   };
 
-  const updateQuantity = (id: string, quantity: number) => {
+  const updateQuantity = (id: string, quantity: number, variantName?: string) => {
     if (quantity <= 0) {
-      removeItem(id);
+      removeItem(id, variantName);
       return;
     }
     setItems((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, quantity: Math.min(quantity, item.stock) } : item
+        item.id === id && item.variantName === variantName
+          ? { ...item, quantity: Math.min(quantity, item.stock) }
+          : item
       )
     );
   };
@@ -91,17 +100,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const total = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
 
-  const getWhatsAppCheckoutUrl = (customerName?: string) => {
+  const getWhatsAppCheckoutUrl = (customerName?: string, orderNumber?: string) => {
     const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "5493548550965";
     return buildWhatsAppLink({
       phone,
       products: items.map((item) => ({
         name: item.name,
+        variantName: item.variantName,
         quantity: item.quantity,
         price: item.price,
       })),
       total,
       customerName,
+      orderNumber,
     });
   };
 

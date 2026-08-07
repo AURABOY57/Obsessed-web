@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { Instagram } from "lucide-react";
 
 export function Footer() {
   return (
@@ -14,9 +15,17 @@ export function Footer() {
             <p className="text-xs text-brand-muted max-w-xs font-mono leading-relaxed">
               Mates, bombillas, termos y accesorios materos. Gran calidad y diseños puros desde Córdoba, Argentina.
             </p>
-            <p className="text-[11px] font-mono text-brand-muted">
-              Córdoba, Argentina.
-            </p>
+            <div className="pt-1">
+              <a
+                href="https://www.instagram.com/obsessed.cba/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-xs font-mono text-brand-black hover:text-brand-muted transition-colors"
+              >
+                <Instagram className="w-4 h-4" />
+                <span>@obsessed.cba</span>
+              </a>
+            </div>
           </div>
 
           {/* Columna 2: Contacto & Envíos */}
@@ -26,6 +35,9 @@ export function Footer() {
             </h4>
             <p className="text-xs text-brand-muted font-mono leading-relaxed">
               Coordinamos pagos mediante transferencia o efectivo, y despachos a todo el país con atención directa.
+            </p>
+            <p className="text-[11px] font-mono text-brand-muted">
+              Córdoba, Argentina.
             </p>
           </div>
 
@@ -45,6 +57,17 @@ export function Footer() {
                   Productos
                 </Link>
               </li>
+              <li>
+                <a
+                  href="https://www.instagram.com/obsessed.cba/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-brand-black transition-colors inline-flex items-center gap-1.5"
+                >
+                  <Instagram className="w-3.5 h-3.5" />
+                  Instagram
+                </a>
+              </li>
             </ul>
           </div>
         </div>
@@ -52,8 +75,18 @@ export function Footer() {
         {/* Barra Inferior */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] font-mono text-brand-muted">
           <p>© {new Date().getFullYear()} obsessed.cba — Todos los derechos reservados.</p>
+          <a
+            href="https://www.instagram.com/obsessed.cba/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 hover:text-brand-black transition-colors"
+          >
+            <Instagram className="w-3.5 h-3.5" />
+            <span>@obsessed.cba</span>
+          </a>
         </div>
       </div>
     </footer>
   );
 }
+

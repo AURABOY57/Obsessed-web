@@ -4,8 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
-import { AddToCartButton } from "@/components/shop/AddToCartButton";
-import { DirectWhatsAppButton } from "@/components/shop/DirectWhatsAppButton";
+import { ProductPurchaseSection } from "@/components/shop/ProductPurchaseSection";
 import { ArrowLeft, ShieldCheck, Truck, MessageCircle } from "lucide-react";
 
 interface ProductPageProps {
@@ -29,6 +28,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     stock: number;
     imageUrl: string;
     images: string[];
+    variants?: any;
     isActive: boolean;
   } | null = null;
 
@@ -48,6 +48,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         stock: dbProduct.stock,
         imageUrl: dbProduct.imageUrl,
         images: dbProduct.images,
+        variants: dbProduct.variants,
         isActive: dbProduct.isActive,
       };
     }
@@ -66,6 +67,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         category: "Mates",
         price: 48000,
         stock: 8,
+        variants: [{ name: "Virola", options: ["Lisa", "Cincelada"] }],
         imageUrl: "/images/products/mate-imperial-noir.png",
         images: [],
         isActive: true,
@@ -78,6 +80,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         category: "Mates",
         price: 42000,
         stock: 6,
+        variants: [{ name: "Color", options: ["Negro", "Marrón"] }],
         imageUrl: "/images/products/mate-torpedo-cuero.png",
         images: [],
         isActive: true,
@@ -102,6 +105,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         category: "Bombillas",
         price: 18500,
         stock: 15,
+        variants: [{ name: "Modelo", options: ["Pico de Loro", "Resorte"] }],
         imageUrl: "/images/products/bombilla-alpaca-pico.png",
         images: [],
         isActive: true,
@@ -182,18 +186,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             </div>
           )}
 
-          {/* Botones de Acción */}
-          <div className="space-y-3 pt-4 border-t border-brand-border">
-            <DirectWhatsAppButton
-              product={product}
-              label="Comprar directo por WhatsApp"
-              className="w-full h-12 text-xs"
-            />
-            <AddToCartButton
-              product={product}
-              variant="outline"
-              className="w-full h-12 text-xs"
-            />
+          {/* Selector de Variantes y Botones de Compra */}
+          <div className="pt-4 border-t border-brand-border">
+            <ProductPurchaseSection product={product} />
           </div>
 
           {/* Beneficios & Envíos */}

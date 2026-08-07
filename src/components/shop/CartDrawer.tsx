@@ -7,6 +7,8 @@ import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/utils";
 import { X, Trash2, Plus, Minus, MessageCircle, ArrowRight } from "lucide-react";
 
+import { createOrderAction } from "@/actions/order-actions";
+
 export function CartDrawer() {
   const {
     items,
@@ -20,11 +22,39 @@ export function CartDrawer() {
   } = useCart();
 
   const [customerName, setCustomerName] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleCheckoutWhatsApp = () => {
-    const url = getWhatsAppCheckoutUrl(customerName);
+  const handleCheckoutWhatsApp = async () => {
+    setIsProcessing(true);
+    let orderNumber: string | undefined = undefined;
+
+    try {
+      const res = await createOrderAction({
+        customerName: customerName.trim() || "Cliente WhatsApp",
+        customerPhone: "Vía WhatsApp",
+        status: "PENDING" as any,
+        paymentMethod: "WHATSAPP_COORDINATE",
+        items: items.map((item) => ({
+          productId: item.id,
+          name: item.name,
+          variantName: item.variantName,
+          quantity: item.quantity,
+          unitPrice: item.price,
+        })),
+      });
+
+      if (res.success && res.data) {
+        orderNumber = (res.data as any).orderNumber;
+      }
+    } catch (e) {
+      console.warn("[CHECKOUT_ORDER_CREATE_ERROR]:", e);
+    } finally {
+      setIsProcessing(false);
+    }
+
+    const url = getWhatsAppCheckoutUrl(customerName, orderNumber);
     window.open(url, "_blank");
   };
 
@@ -97,13 +127,18 @@ export function CartDrawer() {
                           {item.name}
                         </Link>
                         <button
-                          onClick={() => removeItem(item.id)}
+                          onClick={() => removeItem(item.id, item.variantName)}
                           className="text-brand-muted hover:text-red-600 transition-colors p-0.5"
                         >
                           <Trash2 size={13} />
                         </button>
                       </div>
-                      <p className="text-xs font-mono text-brand-black mt-1">
+                      {item.variantName && (
+                        <p className="text-[10px] font-mono text-brand-muted">
+                          {item.variantName}
+                        </p>
+                      )}
+                      <p className="text-xs font-mono text-brand-black mt-0.5">
                         {formatPrice(item.price)}
                       </p>
                     </div>
@@ -112,7 +147,7 @@ export function CartDrawer() {
                     <div className="flex items-center justify-between pt-2">
                       <div className="flex items-center border border-brand-border">
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.id, item.quantity - 1, item.variantName)}
                           className="p-1 text-brand-black hover:bg-brand-surface transition-colors"
                         >
                           <Minus size={11} />
@@ -121,7 +156,7 @@ export function CartDrawer() {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.id, item.quantity + 1, item.variantName)}
                           disabled={item.quantity >= item.stock}
                           className="p-1 text-brand-black hover:bg-brand-surface disabled:opacity-30 transition-colors"
                         >

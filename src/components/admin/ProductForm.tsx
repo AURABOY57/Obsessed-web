@@ -6,6 +6,12 @@ import { createProductAction, updateProductAction } from "@/actions/product-acti
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Plus, Trash2, Sparkles, Layers } from "lucide-react";
+
+export interface ProductVariantItem {
+  name: string; // ej: "Tipo de Virola", "Color", "Material"
+  options: string[]; // ej: ["Lisa", "Cincelada"]
+}
 
 interface ProductFormProps {
   initialData?: {
@@ -15,11 +21,21 @@ interface ProductFormProps {
     category: string | null;
     subCategory?: string | null;
     price: number | string;
+    costPrice?: number | string | null;
     stock: number;
+    variants?: any;
     imageUrl: string;
     isActive: boolean;
   };
 }
+
+const CATEGORY_SUGGESTIONS: Record<string, string[]> = {
+  Mates: ["Imperial", "Torpedo", "Camionero", "Calabaza", "Madera", "Acero", "Cerámica"],
+  Bombillas: ["Alpaca Cincelada", "Alpaca Lisa", "Pico de Loro", "Acero Inoxidable", "Resorte"],
+  Yerbas: ["Con Palo", "Despalada", "Compuesta", "Barbacuá", "Orgánica"],
+  Termos: ["Acero Inox 1L", "Pico Cebador", "Media Manija", "Obsidian Matte"],
+  Accesorios: ["Matera de Cuero", "Cuchillo Criollo", "Porta Termo", "Limpiador"],
+};
 
 export function ProductForm({ initialData }: ProductFormProps) {
   const router = useRouter();
@@ -30,13 +46,58 @@ export function ProductForm({ initialData }: ProductFormProps) {
   const [category, setCategory] = useState(initialData?.category || "Mates");
   const [subCategory, setSubCategory] = useState(initialData?.subCategory || "");
   const [price, setPrice] = useState(initialData?.price ? String(initialData.price) : "");
-  const [stock, setStock] = useState(initialData?.stock !== undefined ? String(initialData.stock) : "1");
+  const [costPrice, setCostPrice] = useState(initialData?.costPrice ? String(initialData.costPrice) : "");
+  const [stock, setStock] = useState(initialData?.stock !== undefined ? String(initialData.stock) : "5");
   const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || "");
   const [isActive, setIsActive] = useState(initialData?.isActive ?? true);
+
+  // Variantes
+  const [variants, setVariants] = useState<ProductVariantItem[]>(() => {
+    if (initialData?.variants && Array.isArray(initialData.variants)) {
+      return initialData.variants;
+    }
+    return [];
+  });
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null);
+
+  // Manejo de Variantes
+  const handleAddVariantGroup = () => {
+    setVariants((prev) => [...prev, { name: "Tipo de Virola", options: ["Lisa", "Cincelada"] }]);
+  };
+
+  const handleRemoveVariantGroup = (index: number) => {
+    setVariants((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateVariantName = (index: number, newName: string) => {
+    setVariants((prev) =>
+      prev.map((v, i) => (i === index ? { ...v, name: newName } : v))
+    );
+  };
+
+  const handleUpdateVariantOptions = (index: number, optionsString: string) => {
+    const splitOptions = optionsString
+      .split(",")
+      .map((opt) => opt.trim())
+      .filter((opt) => opt.length > 0);
+
+    setVariants((prev) =>
+      prev.map((v, i) => (i === index ? { ...v, options: splitOptions } : v))
+    );
+  };
+
+  const handleQuickVariantTemplate = (type: "virola" | "color" | "material") => {
+    if (type === "virola") {
+      setVariants((prev) => [...prev, { name: "Virola", options: ["Lisa", "Cincelada"] }]);
+    } else if (type === "color") {
+      setVariants((prev) => [...prev, { name: "Color", options: ["Negro", "Marrón", "Suela"] }]);
+    } else if (type === "material") {
+      setVariants((prev) => [...prev, { name: "Material", options: ["Calabaza", "Alpaca Maciza"] }]);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +117,9 @@ export function ProductForm({ initialData }: ProductFormProps) {
       category,
       subCategory,
       price: Number(price),
+      costPrice: costPrice ? Number(costPrice) : null,
       stock: Number(stock),
+      variants: variants.filter((v) => v.name.trim() && v.options.length > 0),
       imageUrl,
       images: [imageUrl],
       isActive,
@@ -75,6 +138,8 @@ export function ProductForm({ initialData }: ProductFormProps) {
       router.refresh();
     }
   };
+
+  const availableSubcategories = CATEGORY_SUGGESTIONS[category] || [];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
@@ -95,7 +160,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
         <p className="text-xs font-mono text-red-600">{fieldErrors.imageUrl[0]}</p>
       )}
 
-      {/* Campos de Texto */}
+      {/* Campos de Información General */}
       <div className="grid grid-cols-1 gap-4">
         <Input
           label="Nombre del Producto *"
@@ -107,9 +172,9 @@ export function ProductForm({ initialData }: ProductFormProps) {
           disabled={isLoading}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Input
-            label="Precio (ARS) *"
+            label="Precio de Venta (ARS) *"
             type="number"
             min="0"
             step="1"
@@ -122,7 +187,17 @@ export function ProductForm({ initialData }: ProductFormProps) {
           />
 
           <Input
-            label="Stock Disponible *"
+            label="Costo Estimado (Opcional)"
+            type="number"
+            min="0"
+            placeholder="Ej: 28000"
+            value={costPrice}
+            onChange={(e) => setCostPrice(e.target.value)}
+            disabled={isLoading}
+          />
+
+          <Input
+            label="Stock Inicial *"
             type="number"
             min="0"
             placeholder="Ej: 10"
@@ -134,26 +209,169 @@ export function ProductForm({ initialData }: ProductFormProps) {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            label="Categoría Principal"
-            placeholder="Ej: Mates, Bombillas, Termos, Accesorios"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            disabled={isLoading}
-          />
-          <Input
-            label="Subcategoría (Opcional)"
-            placeholder="Ej: Imperial, Torpedo, Camionero, Alpaca"
-            value={subCategory}
-            onChange={(e) => setSubCategory(e.target.value)}
-            disabled={isLoading}
-          />
+        {/* Categorización Clara */}
+        <div className="space-y-2 border border-brand-border p-4 bg-brand-surface/40">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-mono uppercase tracking-widest text-brand-black font-semibold">
+                Categoría Principal *
+              </label>
+              <select
+                value={category}
+                onChange={(e) => {
+                  setCategory(e.target.value);
+                  setSubCategory("");
+                }}
+                disabled={isLoading}
+                className="w-full h-10 border border-brand-border bg-brand-white px-3 text-xs font-mono text-brand-black focus:border-brand-black focus:outline-none"
+              >
+                <option value="Mates">Mates</option>
+                <option value="Bombillas">Bombillas</option>
+                <option value="Yerbas">Yerbas</option>
+                <option value="Termos">Termos</option>
+                <option value="Accesorios">Accesorios</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-mono uppercase tracking-widest text-brand-black font-semibold">
+                Subcategoría / Tipo
+              </label>
+              <input
+                type="text"
+                list="subcategories-list"
+                placeholder="Ej: Calabaza, Madera, Imperial..."
+                value={subCategory}
+                onChange={(e) => setSubCategory(e.target.value)}
+                disabled={isLoading}
+                className="w-full h-10 border border-brand-border bg-brand-white px-3 text-xs font-mono text-brand-black focus:border-brand-black focus:outline-none"
+              />
+              <datalist id="subcategories-list">
+                {availableSubcategories.map((sub) => (
+                  <option key={sub} value={sub} />
+                ))}
+              </datalist>
+            </div>
+          </div>
+
+          {/* Sugerencias Rápidas de Subcategoría */}
+          {availableSubcategories.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <span className="text-[10px] font-mono text-brand-muted uppercase">Sugeridos:</span>
+              {availableSubcategories.map((sub) => (
+                <button
+                  type="button"
+                  key={sub}
+                  onClick={() => setSubCategory(sub)}
+                  className={`text-[10px] font-mono px-2 py-0.5 border transition-colors ${
+                    subCategory === sub
+                      ? "bg-brand-black text-brand-white border-brand-black"
+                      : "bg-brand-white text-brand-muted hover:text-brand-black border-brand-border"
+                  }`}
+                >
+                  {sub}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
+        {/* Sección de Variantes (Virola Lisa/Cincelada, Colores, etc.) */}
+        <div className="space-y-3 border border-brand-border p-4 bg-brand-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-xs font-mono font-bold uppercase tracking-widest text-brand-black flex items-center gap-1.5">
+                <Layers size={14} />
+                <span>Variantes del Producto</span>
+              </h4>
+              <p className="text-[11px] font-mono text-brand-muted">
+                Opciones seleccionables por el cliente (ej. Virola Lisa o Cincelada, Colores de cuero).
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleAddVariantGroup}
+              className="text-xs font-mono uppercase tracking-wider px-2.5 py-1 border border-brand-black hover:bg-brand-black hover:text-brand-white transition-colors flex items-center gap-1"
+            >
+              <Plus size={12} />
+              <span>+ Variante</span>
+            </button>
+          </div>
+
+          {/* Plantillas Rápidas */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-mono text-brand-muted uppercase">Plantillas rápidas:</span>
+            <button
+              type="button"
+              onClick={() => handleQuickVariantTemplate("virola")}
+              className="text-[10px] font-mono px-2 py-0.5 bg-neutral-100 hover:bg-neutral-200 border border-brand-border uppercase"
+            >
+              + Virola (Lisa / Cincelada)
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickVariantTemplate("color")}
+              className="text-[10px] font-mono px-2 py-0.5 bg-neutral-100 hover:bg-neutral-200 border border-brand-border uppercase"
+            >
+              + Colores de Cuero
+            </button>
+          </div>
+
+          {/* Listado de Variantes Definidas */}
+          {variants.length === 0 ? (
+            <p className="text-[11px] font-mono text-brand-muted italic py-1">
+              Sin variantes. El producto se venderá como modelo único estándar.
+            </p>
+          ) : (
+            <div className="space-y-3 pt-2">
+              {variants.map((v, idx) => (
+                <div key={idx} className="border border-brand-border p-3 bg-brand-surface/40 flex items-start gap-3">
+                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-mono uppercase text-brand-muted">
+                        Tipo de Variante:
+                      </label>
+                      <input
+                        type="text"
+                        value={v.name}
+                        onChange={(e) => handleUpdateVariantName(idx, e.target.value)}
+                        placeholder="Ej: Tipo de Virola"
+                        className="w-full h-8 border border-brand-border bg-brand-white px-2 text-xs font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-mono uppercase text-brand-muted">
+                        Opciones (separadas por coma):
+                      </label>
+                      <input
+                        type="text"
+                        value={v.options.join(", ")}
+                        onChange={(e) => handleUpdateVariantOptions(idx, e.target.value)}
+                        placeholder="Ej: Lisa, Cincelada"
+                        className="w-full h-8 border border-brand-border bg-brand-white px-2 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveVariantGroup(idx)}
+                    className="p-1.5 text-brand-muted hover:text-red-600 transition-colors mt-4"
+                    title="Eliminar variante"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Descripción */}
         <div className="space-y-1.5">
           <label className="block text-xs font-mono uppercase tracking-widest text-brand-black">
-            Descripción / Detalles
+            Descripción / Detalles del Producto
           </label>
           <textarea
             rows={3}

@@ -4,9 +4,14 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { formatPrice } from "@/lib/utils";
-import { quickUpdateProductAction, toggleProductStatusAction, deleteProductAction } from "@/actions/product-actions";
+import {
+  quickUpdateProductAction,
+  quickAdjustStockAction,
+  toggleProductStatusAction,
+  deleteProductAction,
+} from "@/actions/product-actions";
 import { Badge } from "@/components/ui/badge";
-import { Edit3, Trash2, Eye, EyeOff, Save, Check } from "lucide-react";
+import { Edit3, Trash2, Eye, EyeOff, Save, Check, Plus, Minus, AlertCircle } from "lucide-react";
 
 interface QuickProductRowProps {
   product: {
@@ -19,6 +24,7 @@ interface QuickProductRowProps {
     isActive: boolean;
     category?: string | null;
     subCategory?: string | null;
+    variants?: any;
   };
 }
 
@@ -31,6 +37,7 @@ export function QuickProductRow({ product }: QuickProductRowProps) {
   const [isDeleted, setIsDeleted] = useState(false);
 
   const hasChanges = price !== product.price || stock !== product.stock;
+  const isCriticalStock = stock < 2;
 
   const handleSaveQuick = async () => {
     setIsSaving(true);
@@ -40,6 +47,12 @@ export function QuickProductRow({ product }: QuickProductRowProps) {
       setJustSaved(true);
       setTimeout(() => setJustSaved(false), 2000);
     }
+  };
+
+  const handleAdjustStock = async (delta: number) => {
+    const nextStock = Math.max(0, stock + delta);
+    setStock(nextStock);
+    await quickAdjustStockAction(product.id, delta);
   };
 
   const handleToggleActive = async () => {
@@ -56,10 +69,24 @@ export function QuickProductRow({ product }: QuickProductRowProps) {
 
   if (isDeleted) return null;
 
+  // Variantes formateadas para preview
+  let variantText = "";
+  if (product.variants && Array.isArray(product.variants) && product.variants.length > 0) {
+    variantText = product.variants
+      .map((v: any) => `${v.name}: ${Array.isArray(v.options) ? v.options.join(", ") : ""}`)
+      .join(" | ");
+  }
+
   return (
-    <div className="border border-brand-border bg-brand-white p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors hover:border-brand-black">
+    <div
+      className={`border bg-brand-white p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
+        isCriticalStock
+          ? "border-amber-400/80 hover:border-amber-600 bg-amber-50/20"
+          : "border-brand-border hover:border-brand-black"
+      }`}
+    >
       {/* Información del Producto */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <div className="relative w-14 h-14 border border-brand-border flex-shrink-0 bg-brand-surface">
           <Image
             src={product.imageUrl}
@@ -68,26 +95,41 @@ export function QuickProductRow({ product }: QuickProductRowProps) {
             unoptimized
             className="object-cover"
           />
+          {isCriticalStock && (
+            <div className="absolute top-0 right-0 bg-amber-600 text-brand-white p-0.5" title="Stock bajo (< 2)">
+              <AlertCircle size={10} />
+            </div>
+          )}
         </div>
-        <div className="space-y-1">
+        <div className="space-y-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h4 className="text-xs font-semibold text-brand-black uppercase tracking-wider line-clamp-1">
+            <Link
+              href={`/admin/productos/editar/${product.id}`}
+              className="text-xs font-semibold text-brand-black uppercase tracking-wider line-clamp-1 hover:underline"
+            >
               {product.name}
-            </h4>
+            </Link>
             <Badge variant={isActive ? "active" : "inactive"}>
               {isActive ? "Activo" : "Oculto"}
             </Badge>
           </div>
-          <p className="text-[11px] font-mono text-brand-muted">
-            {product.category || "General"} • {formatPrice(price)}
-          </p>
+          <div className="flex items-center gap-2 text-[11px] font-mono text-brand-muted">
+            <span>{product.category || "General"}</span>
+            {product.subCategory && <span>• {product.subCategory}</span>}
+            <span>• {formatPrice(price)}</span>
+          </div>
+          {variantText && (
+            <p className="text-[10px] font-mono text-brand-muted truncate max-w-xs">
+              ⚡ {variantText}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Controles Rápidos de Stock y Precio (Móvil / PC) */}
+      {/* Controles de Stock en 1 Clic y Precio */}
       <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-brand-border">
         <div className="flex items-center gap-2">
-          {/* Input de Precio Rápido */}
+          {/* Input de Precio */}
           <div className="flex items-center border border-brand-border px-2 py-1 bg-brand-surface">
             <span className="text-[10px] font-mono text-brand-muted mr-1">$</span>
             <input
@@ -99,19 +141,34 @@ export function QuickProductRow({ product }: QuickProductRowProps) {
             />
           </div>
 
-          {/* Input de Stock Rápido */}
-          <div className="flex items-center border border-brand-border px-2 py-1 bg-brand-surface">
-            <span className="text-[10px] font-mono text-brand-muted mr-1">Cant:</span>
+          {/* Control de Stock con botones de 1 Clic */}
+          <div className="flex items-center border border-brand-border bg-brand-surface">
+            <button
+              onClick={() => handleAdjustStock(-1)}
+              title="Restar 1 unidad"
+              className="p-1 hover:bg-neutral-200 text-brand-black transition-colors"
+            >
+              <Minus size={11} />
+            </button>
             <input
               type="number"
               aria-label="Stock"
               value={stock}
               onChange={(e) => setStock(Number(e.target.value))}
-              className="w-12 bg-transparent text-xs font-mono text-brand-black focus:outline-none"
+              className={`w-10 text-center bg-transparent text-xs font-mono font-bold focus:outline-none ${
+                isCriticalStock ? "text-amber-700" : "text-brand-black"
+              }`}
             />
+            <button
+              onClick={() => handleAdjustStock(1)}
+              title="Sumar 1 unidad (+1 clic)"
+              className="p-1 hover:bg-neutral-200 text-brand-black transition-colors"
+            >
+              <Plus size={11} />
+            </button>
           </div>
 
-          {/* Botón Guardar Rápido si hay cambios */}
+          {/* Botón Guardar Rápido si hay cambios manuales en el input */}
           {hasChanges && (
             <button
               onClick={handleSaveQuick}
@@ -124,8 +181,15 @@ export function QuickProductRow({ product }: QuickProductRowProps) {
           )}
         </div>
 
-        {/* Acciones de Ocultar, Editar Completo y Eliminar */}
+        {/* Acciones de Ocultar, Editar y Eliminar */}
         <div className="flex items-center gap-1 border-l border-brand-border pl-2">
+          <Link
+            href={`/admin/productos/editar/${product.id}`}
+            title="Editar producto completo"
+            className="p-1.5 text-brand-muted hover:text-brand-black transition-colors"
+          >
+            <Edit3 size={15} />
+          </Link>
           <button
             onClick={handleToggleActive}
             title={isActive ? "Ocultar en tienda" : "Mostrar en tienda"}

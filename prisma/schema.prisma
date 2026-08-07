@@ -28,7 +28,9 @@ model Product {
   category    String?     @default("General")
   subCategory String?
   price       Decimal     @db.Decimal(10, 2)
+  costPrice   Decimal?    @db.Decimal(10, 2)
   stock       Int         @default(0)
+  variants    Json?       // Lista de variantes ej: [{"name": "Virola", "options": ["Lisa", "Cincelada"]}]
   imageUrl    String      // Cloudinary secure URL
   images      String[]    @default([]) // Galería de imágenes adicionales
   isActive    Boolean     @default(true)
@@ -48,6 +50,8 @@ model Order {
   customerPhone   String
   customerEmail   String?
   customerAddress String?
+  shippingCarrier String?       // Ej: Correo Argentino, Andreani, Cadete
+  trackingNumber  String?       // Código de seguimiento de envío
   status          OrderStatus   @default(PENDING)
   total           Decimal       @db.Decimal(10, 2)
   paymentMethod   String?       @default("WHATSAPP_COORDINATE")
@@ -62,14 +66,15 @@ model Order {
 }
 
 model OrderItem {
-  id        String   @id @default(cuid())
-  orderId   String
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
-  quantity  Int      @default(1)
-  unitPrice Decimal  @db.Decimal(10, 2)
-  subtotal  Decimal  @db.Decimal(10, 2)
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  variantName String?  // Ej: "Virola Cincelada - Cuero Negro"
+  quantity    Int      @default(1)
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  subtotal    Decimal  @db.Decimal(10, 2)
 
   @@index([orderId])
   @@index([productId])
