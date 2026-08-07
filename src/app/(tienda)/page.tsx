@@ -7,8 +7,19 @@ import { ArrowDown, MessageCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
+interface HomeProduct {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  stock: number;
+  imageUrl: string;
+  category: string;
+  subCategory?: string | null;
+}
+
 // Datos de demostración de alta calidad en caso de base de datos vacía
-const DEMO_PRODUCTS = [
+const DEMO_PRODUCTS: HomeProduct[] = [
   {
     id: "demo-1",
     name: "Mate Imperial Premium Noir",
@@ -52,7 +63,7 @@ const DEMO_PRODUCTS = [
 ];
 
 export default async function StoreHomePage() {
-  let products = DEMO_PRODUCTS;
+  let products: HomeProduct[] = DEMO_PRODUCTS;
 
   try {
     const dbProducts = await prisma.product.findMany({
