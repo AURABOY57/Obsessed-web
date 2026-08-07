@@ -27,20 +27,25 @@ model Product {
   description String?     @db.Text
   category    String?     @default("General")
   subCategory String?
-  price       Decimal     @db.Decimal(10, 2)
-  costPrice   Decimal?    @db.Decimal(10, 2)
-  stock       Int         @default(0)
-  variants    Json?       // Lista de variantes ej: [{"name": "Virola", "options": ["Lisa", "Cincelada"]}]
-  imageUrl    String      // Cloudinary secure URL
-  images      String[]    @default([]) // Galería de imágenes adicionales
-  isActive    Boolean     @default(true)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  price         Decimal     @db.Decimal(10, 2)
+  originalPrice Decimal?    @db.Decimal(10, 2) // Precio original tachado si hay oferta activa
+  offerPrice    Decimal?    @db.Decimal(10, 2) // Precio promocional
+  offerEndsAt   DateTime?   // Fecha y hora de vencimiento de la oferta
+  offerLabel    String?     // Etiqueta ej: "20% OFF", "HOT SALE", "FIN DE SEMANA"
+  costPrice     Decimal?    @db.Decimal(10, 2)
+  stock         Int         @default(0)
+  variants      Json?       // Lista de variantes ej: [{"name": "Virola", "options": ["Lisa", "Cincelada"]}]
+  imageUrl      String      // Cloudinary secure URL
+  images        String[]    @default([]) // Galería de imágenes adicionales
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   orderItems  OrderItem[]
 
   @@index([slug])
   @@index([isActive])
+  @@index([offerEndsAt])
 }
 
 model Order {

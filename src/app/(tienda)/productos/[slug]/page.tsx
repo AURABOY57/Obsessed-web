@@ -5,18 +5,19 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
 import { ProductPurchaseSection } from "@/components/shop/ProductPurchaseSection";
-import { ArrowLeft, ShieldCheck, Truck, MessageCircle } from "lucide-react";
+import { OfferCountdown } from "@/components/shop/OfferCountdown";
+import { ArrowLeft, ShieldCheck, Truck, MessageCircle, Flame } from "lucide-react";
 
 interface ProductPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export const dynamic = "force-dynamic";
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
-  const { slug } = params;
+  const { slug } = await params;
 
   let product: {
     id: string;
@@ -25,6 +26,10 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     description: string | null;
     category: string | null;
     price: number;
+    originalPrice?: number | null;
+    offerPrice?: number | null;
+    offerEndsAt?: string | Date | null;
+    offerLabel?: string | null;
     stock: number;
     imageUrl: string;
     images: string[];
@@ -45,6 +50,10 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         description: dbProduct.description,
         category: dbProduct.category,
         price: Number(dbProduct.price),
+        originalPrice: dbProduct.originalPrice ? Number(dbProduct.originalPrice) : null,
+        offerPrice: dbProduct.offerPrice ? Number(dbProduct.offerPrice) : null,
+        offerEndsAt: dbProduct.offerEndsAt ? dbProduct.offerEndsAt.toISOString() : null,
+        offerLabel: dbProduct.offerLabel,
         stock: dbProduct.stock,
         imageUrl: dbProduct.imageUrl,
         images: dbProduct.images,
@@ -122,6 +131,12 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   }
 
   const isOutOfStock = product.stock <= 0;
+  const isOfferActive = Boolean(
+    product.offerEndsAt &&
+      new Date(product.offerEndsAt).getTime() > Date.now() &&
+      product.originalPrice &&
+      Number(product.originalPrice) > Number(product.price)
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-12">
@@ -146,12 +161,18 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               priority
               className="object-cover"
             />
+            {isOfferActive && (
+              <div className="absolute top-4 right-4 bg-amber-500 text-black text-xs font-mono font-bold uppercase tracking-wider px-3 py-1 flex items-center gap-1.5 shadow-md">
+                <Flame size={14} />
+                <span>{product.offerLabel || "OFERTA"}</span>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Columna Derecha: Información & Compra */}
         <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
-          <div className="space-y-2 border-b border-brand-border pb-6">
+          <div className="space-y-3 border-b border-brand-border pb-6">
             {product.category && (
               <span className="text-[10px] uppercase tracking-widest font-mono text-brand-muted">
                 {product.category}
@@ -160,9 +181,29 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             <h1 className="text-2xl sm:text-3xl font-bold font-mono uppercase tracking-wide text-brand-black">
               {product.name}
             </h1>
-            <p className="text-xl font-bold font-mono text-brand-black">
-              {formatPrice(product.price)}
-            </p>
+
+            {/* Bloque de Precios y Oferta */}
+            <div className="space-y-2">
+              <div className="flex items-baseline gap-3 flex-wrap">
+                <span className="text-2xl font-bold font-mono text-brand-black">
+                  {formatPrice(product.price)}
+                </span>
+                {isOfferActive && product.originalPrice && (
+                  <span className="text-base font-mono text-neutral-400 line-through">
+                    {formatPrice(Number(product.originalPrice))}
+                  </span>
+                )}
+              </div>
+
+              {/* Cuenta Regresiva de Oferta */}
+              {isOfferActive && (
+                <OfferCountdown
+                  endsAt={product.offerEndsAt}
+                  label={product.offerLabel}
+                />
+              )}
+            </div>
+
             <div className="pt-1">
               <span
                 className={`text-[11px] font-mono uppercase tracking-wider ${

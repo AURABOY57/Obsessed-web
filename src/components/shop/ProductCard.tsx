@@ -4,6 +4,8 @@ import Image from "next/image";
 import { formatPrice } from "@/lib/utils";
 import { AddToCartButton } from "@/components/shop/AddToCartButton";
 import { DirectWhatsAppButton } from "@/components/shop/DirectWhatsAppButton";
+import { OfferCountdown } from "@/components/shop/OfferCountdown";
+import { Flame } from "lucide-react";
 
 interface ProductCardProps {
   product: {
@@ -11,6 +13,10 @@ interface ProductCardProps {
     name: string;
     slug: string;
     price: number;
+    originalPrice?: number | null;
+    offerPrice?: number | null;
+    offerEndsAt?: string | Date | null;
+    offerLabel?: string | null;
     stock: number;
     imageUrl: string;
     category?: string | null;
@@ -20,6 +26,13 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const isOutOfStock = product.stock <= 0;
+
+  const isOfferActive = Boolean(
+    product.offerEndsAt &&
+      new Date(product.offerEndsAt).getTime() > Date.now() &&
+      product.originalPrice &&
+      Number(product.originalPrice) > Number(product.price)
+  );
 
   return (
     <div className="group border border-brand-border bg-brand-white flex flex-col justify-between transition-all duration-300 hover:border-brand-black">
@@ -41,6 +54,14 @@ export function ProductCard({ product }: ProductCardProps) {
         {isOutOfStock && (
           <div className="absolute top-2 left-2 bg-brand-black text-brand-white text-[9px] font-mono uppercase tracking-widest px-2 py-0.5">
             Agotado
+          </div>
+        )}
+
+        {/* Badge de Oferta Activa */}
+        {isOfferActive && !isOutOfStock && (
+          <div className="absolute top-2 right-2 bg-amber-500 text-black text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 flex items-center gap-1 shadow-sm">
+            <Flame size={10} />
+            <span>{product.offerLabel || "OFERTA"}</span>
           </div>
         )}
 
@@ -67,9 +88,25 @@ export function ProductCard({ product }: ProductCardProps) {
           >
             {product.name}
           </Link>
-          <p className="text-sm font-bold font-mono text-brand-black">
-            {formatPrice(product.price)}
-          </p>
+
+          {/* Precio y Oferta */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-bold font-mono text-brand-black">
+              {formatPrice(product.price)}
+            </p>
+            {isOfferActive && product.originalPrice && (
+              <span className="text-xs font-mono text-neutral-400 line-through">
+                {formatPrice(Number(product.originalPrice))}
+              </span>
+            )}
+          </div>
+
+          {/* Cuenta Regresiva de Oferta */}
+          {isOfferActive && (
+            <div className="pt-0.5">
+              <OfferCountdown endsAt={product.offerEndsAt} compact />
+            </div>
+          )}
         </div>
 
         {/* Acciones Rápidas (Carrito + WhatsApp) */}

@@ -8,13 +8,13 @@ import { ArrowLeft } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 interface EditProductPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function EditProductPage({ params }: EditProductPageProps) {
-  const { id } = params;
+  const { id } = await params;
 
   let product: any = null;
 
@@ -31,6 +31,10 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         category: dbProduct.category,
         subCategory: dbProduct.subCategory,
         price: Number(dbProduct.price),
+        originalPrice: dbProduct.originalPrice ? Number(dbProduct.originalPrice) : null,
+        offerPrice: dbProduct.offerPrice ? Number(dbProduct.offerPrice) : null,
+        offerEndsAt: dbProduct.offerEndsAt ? dbProduct.offerEndsAt.toISOString() : null,
+        offerLabel: dbProduct.offerLabel,
         costPrice: dbProduct.costPrice ? Number(dbProduct.costPrice) : null,
         stock: dbProduct.stock,
         variants: dbProduct.variants,

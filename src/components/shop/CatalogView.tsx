@@ -18,6 +18,10 @@ export interface ProductItem {
   name: string;
   slug: string;
   price: number;
+  originalPrice?: number | null;
+  offerPrice?: number | null;
+  offerEndsAt?: string | Date | null;
+  offerLabel?: string | null;
   stock: number;
   imageUrl: string;
   category?: string | null;

@@ -13,12 +13,19 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Edit3, Trash2, Eye, EyeOff, Save, Check, Plus, Minus, AlertCircle } from "lucide-react";
 
+import { OfferCountdown } from "@/components/shop/OfferCountdown";
+import { removeOfferAction } from "@/actions/product-actions";
+
 interface QuickProductRowProps {
   product: {
     id: string;
     name: string;
     slug: string;
     price: number;
+    originalPrice?: number | null;
+    offerPrice?: number | null;
+    offerEndsAt?: string | Date | null;
+    offerLabel?: string | null;
     stock: number;
     imageUrl: string;
     isActive: boolean;
@@ -41,6 +48,13 @@ export function QuickProductRow({
   const [isSaving, setIsSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
+
+  const isOfferActive = Boolean(
+    product.offerEndsAt &&
+      new Date(product.offerEndsAt).getTime() > Date.now() &&
+      product.originalPrice &&
+      Number(product.originalPrice) > Number(product.price)
+  );
 
   const hasChanges = price !== product.price || stock !== product.stock;
   const isCriticalStock = stock < 2;
@@ -88,6 +102,8 @@ export function QuickProductRow({
       className={`border p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
         isSelected
           ? "bg-neutral-100/90 border-brand-black shadow-sm"
+          : isOfferActive
+          ? "border-amber-400/80 bg-amber-50/10 hover:border-amber-600"
           : isCriticalStock
           ? "border-amber-400/80 hover:border-amber-600 bg-amber-50/20"
           : "border-brand-border hover:border-brand-black bg-brand-white"
@@ -130,12 +146,27 @@ export function QuickProductRow({
             <Badge variant={isActive ? "active" : "inactive"}>
               {isActive ? "Activo" : "Oculto"}
             </Badge>
+            {isOfferActive && (
+              <span className="bg-amber-500 text-black text-[9px] font-mono font-bold px-1.5 py-0.2 tracking-wider">
+                🔥 {product.offerLabel || "OFERTA"}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 text-[11px] font-mono text-brand-muted">
             <span>{product.category || "General"}</span>
             {product.subCategory && <span>• {product.subCategory}</span>}
             <span>• {formatPrice(price)}</span>
+            {isOfferActive && product.originalPrice && (
+              <span className="line-through text-neutral-400">
+                {formatPrice(Number(product.originalPrice))}
+              </span>
+            )}
           </div>
+          {isOfferActive && (
+            <div className="pt-0.5">
+              <OfferCountdown endsAt={product.offerEndsAt} compact />
+            </div>
+          )}
           {variantText && (
             <p className="text-[10px] font-mono text-brand-muted truncate max-w-xs">
               ⚡ {variantText}

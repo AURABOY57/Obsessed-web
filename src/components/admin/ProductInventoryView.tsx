@@ -11,6 +11,10 @@ export interface InventoryProduct {
   name: string;
   slug: string;
   price: number;
+  originalPrice?: number | null;
+  offerPrice?: number | null;
+  offerEndsAt?: string | Date | null;
+  offerLabel?: string | null;
   stock: number;
   imageUrl: string;
   isActive: boolean;

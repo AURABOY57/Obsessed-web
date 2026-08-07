@@ -24,6 +24,20 @@ const ProductSchema = z.object({
     .coerce
     .number()
     .positive("El precio debe ser un valor positivo mayor a 0."),
+  originalPrice: z
+    .coerce
+    .number()
+    .min(0)
+    .optional()
+    .nullable(),
+  offerPrice: z
+    .coerce
+    .number()
+    .min(0)
+    .optional()
+    .nullable(),
+  offerEndsAt: z.string().optional().nullable(),
+  offerLabel: z.string().optional().nullable(),
   costPrice: z
     .coerce
     .number()
@@ -618,4 +632,129 @@ export async function bulkDeleteProductsAction(ids: string[]): Promise<ActionRes
     return { success: false, message: "Error al eliminar productos seleccionados." };
   }
 }
+
+/**
+ * Server Action: Aplicar Oferta Personalizada con Duración
+ */
+export async function applyCustomOfferAction(
+  ids: string[],
+  params: {
+    discountPercent?: number;
+    fixedOfferPrice?: number;
+    durationHours?: number; // Ej: 6, 12, 24, 48, 72, 168 (7 días)
+    customEndDate?: string; // ISO string o formato YYYY-MM-DDTHH:mm
+    label?: string; // Ej: "20% OFF", "FLASH SALE", "FIN DE SEMANA"
+  }
+): Promise<ActionResponse> {
+  try {
+    const isAuth = await isAuthenticatedAdmin();
+    if (!isAuth) return { success: false, message: "No autorizado." };
+
+    let endsAt: Date;
+    if (params.customEndDate) {
+      endsAt = new Date(params.customEndDate);
+    } else if (params.durationHours) {
+      endsAt = new Date(Date.now() + params.durationHours * 60 * 60 * 1000);
+    } else {
+      // Default: 24 horas
+      endsAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    }
+
+    try {
+      const products = await prisma.product.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, price: true, originalPrice: true },
+      });
+
+      for (const p of products) {
+        // Preservar el precio base original
+        const basePrice = p.originalPrice ? Number(p.originalPrice) : Number(p.price);
+        let offerPriceVal: number;
+
+        if (params.fixedOfferPrice && params.fixedOfferPrice > 0) {
+          offerPriceVal = params.fixedOfferPrice;
+        } else if (params.discountPercent && params.discountPercent > 0) {
+          offerPriceVal = Math.round(basePrice * (1 - params.discountPercent / 100));
+        } else {
+          offerPriceVal = Math.round(basePrice * 0.85); // 15% default
+        }
+
+        const tagLabel =
+          params.label?.trim() ||
+          (params.discountPercent ? `${params.discountPercent}% OFF` : "OFERTA ESPECIAL");
+
+        await prisma.product.update({
+          where: { id: p.id },
+          data: {
+            originalPrice: basePrice,
+            offerPrice: offerPriceVal,
+            price: offerPriceVal,
+            offerEndsAt: endsAt,
+            offerLabel: tagLabel,
+          },
+        });
+      }
+    } catch (dbError) {
+      console.warn("[APPLY_OFFER_FALLBACK]:", dbError);
+    }
+
+    revalidatePath("/", "layout");
+    revalidatePath("/admin");
+    revalidatePath("/admin/productos");
+
+    return {
+      success: true,
+      message: `Oferta aplicada a ${ids.length} ${ids.length === 1 ? "producto" : "productos"}.`,
+    };
+  } catch (error) {
+    console.error("[APPLY_OFFER_ERROR]:", error);
+    return { success: false, message: "Error al aplicar la oferta." };
+  }
+}
+
+/**
+ * Server Action: Quitar Oferta y Restaurar Precio Original
+ */
+export async function removeOfferAction(ids: string[]): Promise<ActionResponse> {
+  try {
+    const isAuth = await isAuthenticatedAdmin();
+    if (!isAuth) return { success: false, message: "No autorizado." };
+
+    try {
+      const products = await prisma.product.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, price: true, originalPrice: true },
+      });
+
+      for (const p of products) {
+        const restoredPrice = p.originalPrice ? Number(p.originalPrice) : Number(p.price);
+        await prisma.product.update({
+          where: { id: p.id },
+          data: {
+            price: restoredPrice,
+            originalPrice: null,
+            offerPrice: null,
+            offerEndsAt: null,
+            offerLabel: null,
+          },
+        });
+      }
+    } catch (dbError) {
+      console.warn("[REMOVE_OFFER_FALLBACK]:", dbError);
+    }
+
+    revalidatePath("/", "layout");
+    revalidatePath("/admin");
+    revalidatePath("/admin/productos");
+
+    return {
+      success: true,
+      message: `Oferta removida de ${ids.length} productos.`,
+    };
+  } catch (error) {
+    console.error("[REMOVE_OFFER_ERROR]:", error);
+    return { success: false, message: "Error al quitar la oferta." };
+  }
+}
+
 

@@ -21,6 +21,10 @@ interface ProductFormProps {
     category: string | null;
     subCategory?: string | null;
     price: number | string;
+    originalPrice?: number | string | null;
+    offerPrice?: number | string | null;
+    offerEndsAt?: string | Date | null;
+    offerLabel?: string | null;
     costPrice?: number | string | null;
     stock: number;
     variants?: any;
@@ -46,6 +50,21 @@ export function ProductForm({ initialData }: ProductFormProps) {
   const [category, setCategory] = useState(initialData?.category || "Mates");
   const [subCategory, setSubCategory] = useState(initialData?.subCategory || "");
   const [price, setPrice] = useState(initialData?.price ? String(initialData.price) : "");
+  const [originalPrice, setOriginalPrice] = useState(
+    initialData?.originalPrice ? String(initialData.originalPrice) : ""
+  );
+  const [hasOffer, setHasOffer] = useState(
+    Boolean(
+      initialData?.offerEndsAt &&
+        new Date(initialData.offerEndsAt).getTime() > Date.now()
+    )
+  );
+  const [offerEndsAt, setOfferEndsAt] = useState(
+    initialData?.offerEndsAt
+      ? new Date(initialData.offerEndsAt).toISOString().slice(0, 16)
+      : ""
+  );
+  const [offerLabel, setOfferLabel] = useState(initialData?.offerLabel || "OFERTA");
   const [costPrice, setCostPrice] = useState(initialData?.costPrice ? String(initialData.costPrice) : "");
   const [stock, setStock] = useState(initialData?.stock !== undefined ? String(initialData.stock) : "5");
   const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || "");
@@ -117,6 +136,10 @@ export function ProductForm({ initialData }: ProductFormProps) {
       category,
       subCategory,
       price: Number(price),
+      originalPrice: hasOffer && originalPrice ? Number(originalPrice) : null,
+      offerPrice: hasOffer ? Number(price) : null,
+      offerEndsAt: hasOffer && offerEndsAt ? offerEndsAt : null,
+      offerLabel: hasOffer ? offerLabel : null,
       costPrice: costPrice ? Number(costPrice) : null,
       stock: Number(stock),
       variants: variants.filter((v) => v.name.trim() && v.options.length > 0),
@@ -174,7 +197,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Input
-            label="Precio de Venta (ARS) *"
+            label={hasOffer ? "Precio de Oferta (ARS) *" : "Precio de Venta (ARS) *"}
             type="number"
             min="0"
             step="1"
@@ -207,6 +230,76 @@ export function ProductForm({ initialData }: ProductFormProps) {
             required
             disabled={isLoading}
           />
+        </div>
+
+        {/* Sección de Oferta Personalizada con Duración */}
+        <div className="border border-amber-400/80 bg-amber-500/5 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={hasOffer}
+                onChange={(e) => {
+                  setHasOffer(e.target.checked);
+                  if (e.target.checked && !originalPrice && price) {
+                    setOriginalPrice(String(Math.round(Number(price) * 1.25)));
+                  }
+                }}
+                className="w-4 h-4 accent-amber-600 cursor-pointer"
+              />
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-brand-black flex items-center gap-1.5">
+                <span>🔥 Activar Oferta con Duración</span>
+              </span>
+            </label>
+
+            {hasOffer && (
+              <span className="text-[10px] font-mono text-amber-700 bg-amber-200/60 px-2 py-0.5 uppercase tracking-wider font-bold">
+                Promo Activa
+              </span>
+            )}
+          </div>
+
+          {hasOffer && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-amber-300/50 animate-fadeIn">
+              <div>
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-brand-black font-semibold mb-1">
+                  Precio Original Tachado ($):
+                </label>
+                <input
+                  type="number"
+                  placeholder="Ej: 58000"
+                  value={originalPrice}
+                  onChange={(e) => setOriginalPrice(e.target.value)}
+                  className="w-full h-9 border border-brand-border bg-brand-white px-2.5 text-xs font-mono focus:outline-none focus:border-brand-black"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-brand-black font-semibold mb-1">
+                  Etiqueta de la Promo:
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej: 20% OFF / FLASH SALE"
+                  value={offerLabel}
+                  onChange={(e) => setOfferLabel(e.target.value)}
+                  className="w-full h-9 border border-brand-border bg-brand-white px-2.5 text-xs font-mono focus:outline-none focus:border-brand-black"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-brand-black font-semibold mb-1">
+                  Fecha/Hora Límite:
+                </label>
+                <input
+                  type="datetime-local"
+                  value={offerEndsAt}
+                  onChange={(e) => setOfferEndsAt(e.target.value)}
+                  className="w-full h-9 border border-brand-border bg-brand-white px-2.5 text-xs font-mono focus:outline-none focus:border-brand-black"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Categorización Clara */}
