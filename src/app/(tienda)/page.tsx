@@ -132,22 +132,13 @@ export default async function StoreHomePage() {
 
       {/* Grid de Productos / Vidriera Principal */}
       <section id="catalogo" className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 scroll-mt-20">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-brand-border pb-4">
-          <div>
-            <h2 className="text-xs uppercase font-mono tracking-widest font-bold text-brand-black">
-              Piezas Destacadas
-            </h2>
-            <p className="text-[11px] font-mono text-brand-muted mt-0.5">
-              Mates seleccionados, alpacas cinceladas y termos térmicos
-            </p>
-          </div>
-
-          <Link
-            href="/productos"
-            className="text-xs font-mono text-brand-black hover:underline uppercase tracking-wider flex items-center gap-1"
-          >
-            <span>Ver todo el catálogo con filtros →</span>
-          </Link>
+        <div className="border-b border-brand-border pb-4">
+          <h2 className="text-xs uppercase font-mono tracking-widest font-bold text-brand-black">
+            Piezas Destacadas
+          </h2>
+          <p className="text-[11px] font-mono text-brand-muted mt-0.5">
+            Mates seleccionados, alpacas cinceladas y termos térmicos
+          </p>
         </div>
 
         {/* Grid Responsivo (1 col en móvil, 2 en tablet, 3-4 en desktop) */}
