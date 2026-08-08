@@ -54,7 +54,7 @@ export function GiveawayBanner({ whatsappPhone = "5493548550965" }: GiveawayBann
                 ¿Querés Ganar un Imperial de Algarrobo?
               </h2>
               <p className="text-xs sm:text-sm font-mono text-brand-muted leading-relaxed max-w-xl">
-                Nos unimos con el streamer <strong className="text-brand-black">@nnanoide</strong> (German Usinger) para regalar un auténtico <strong className="text-brand-black">Mate Imperial de Algarrobo</strong> con virola de alpaca cincelada a mano.
+                Nos unimos con el streamer <strong className="text-brand-black">@nnanoide y @germanusinger</strong> para regalar un auténtico <strong className="text-brand-black">Mate Imperial de Algarrobo</strong> con virola de alpaca cincelada a mano.
               </p>
             </div>
 
