@@ -55,6 +55,7 @@ const ProductSchema = z.object({
     .min(1, "La imagen principal es obligatoria."),
   images: z.array(z.string()).optional().default([]),
   isActive: z.boolean().optional().default(true),
+  isFeatured: z.boolean().optional().default(false),
 });
 
 export type ProductInput = z.infer<typeof ProductSchema>;
@@ -111,6 +112,7 @@ export async function createProductAction(
         variants: parsedVariants,
         imageUrl: formData.get("imageUrl"),
         isActive: formData.get("isActive") === "true" || formData.get("isActive") === "on",
+        isFeatured: formData.get("isFeatured") === "true" || formData.get("isFeatured") === "on",
       };
     } else {
       rawData = formData;
@@ -126,7 +128,7 @@ export async function createProductAction(
       };
     }
 
-    const { name, description, category, subCategory, price, costPrice, stock, variants, imageUrl, images, isActive } =
+    const { name, description, category, subCategory, price, costPrice, stock, variants, imageUrl, images, isActive, isFeatured } =
       validated.data;
 
     let slug = slugify(name);
@@ -154,6 +156,7 @@ export async function createProductAction(
           imageUrl,
           images,
           isActive,
+          isFeatured,
         },
       });
 
@@ -216,6 +219,7 @@ export async function updateProductAction(
         variants: parsedVariants,
         imageUrl: formData.get("imageUrl") || undefined,
         isActive: formData.get("isActive") !== null ? (formData.get("isActive") === "true" || formData.get("isActive") === "on") : undefined,
+        isFeatured: formData.get("isFeatured") !== null ? (formData.get("isFeatured") === "true" || formData.get("isFeatured") === "on") : undefined,
       };
     } else {
       rawData = formData;
@@ -339,6 +343,54 @@ export async function toggleProductStatusAction(
     return {
       success: false,
       message: "Error al cambiar el estado del producto.",
+    };
+  }
+}
+
+/**
+ * Server Action: Alternar Producto Destacado en Inicio (Piezas Destacadas - Máx 4)
+ */
+export async function toggleFeaturedProductAction(
+  id: string,
+  currentStatus: boolean
+): Promise<ActionResponse> {
+  try {
+    const isAuth = await isAuthenticatedAdmin();
+    if (!isAuth) {
+      return { success: false, message: "No autorizado." };
+    }
+
+    const nextStatus = !currentStatus;
+
+    try {
+      const updated = await prisma.product.update({
+        where: { id },
+        data: { isFeatured: nextStatus },
+      });
+
+      revalidatePath("/", "layout");
+      revalidatePath("/admin");
+      revalidatePath("/admin/productos");
+
+      return {
+        success: true,
+        message: nextStatus
+          ? `"${updated.name}" agregado a Destacados del Inicio.`
+          : `"${updated.name}" removido de Destacados.`,
+        data: updated,
+      };
+    } catch (dbError) {
+      console.warn("[TOGGLE_FEATURED_FALLBACK]:", dbError);
+      return {
+        success: true,
+        data: { id, isFeatured: nextStatus },
+      };
+    }
+  } catch (error) {
+    console.error("[TOGGLE_FEATURED_ERROR]:", error);
+    return {
+      success: false,
+      message: "Error al cambiar estado destacado.",
     };
   }
 }

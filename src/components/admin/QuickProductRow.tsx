@@ -8,10 +8,11 @@ import {
   quickUpdateProductAction,
   quickAdjustStockAction,
   toggleProductStatusAction,
+  toggleFeaturedProductAction,
   deleteProductAction,
 } from "@/actions/product-actions";
 import { Badge } from "@/components/ui/badge";
-import { Edit3, Trash2, Eye, EyeOff, Save, Check, Plus, Minus, AlertCircle } from "lucide-react";
+import { Edit3, Trash2, Eye, EyeOff, Save, Check, Plus, Minus, AlertCircle, Star } from "lucide-react";
 
 import { OfferCountdown } from "@/components/shop/OfferCountdown";
 import { removeOfferAction } from "@/actions/product-actions";
@@ -29,6 +30,7 @@ interface QuickProductRowProps {
     stock: number;
     imageUrl: string;
     isActive: boolean;
+    isFeatured?: boolean;
     category?: string | null;
     subCategory?: string | null;
     variants?: any;
@@ -45,6 +47,7 @@ export function QuickProductRow({
   const [price, setPrice] = useState(product.price);
   const [stock, setStock] = useState(product.stock);
   const [isActive, setIsActive] = useState(product.isActive);
+  const [isFeatured, setIsFeatured] = useState(product.isFeatured ?? false);
   const [isSaving, setIsSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);

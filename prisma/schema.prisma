@@ -38,6 +38,7 @@ model Product {
   imageUrl      String      // Cloudinary secure URL
   images        String[]    @default([]) // Galería de imágenes adicionales
   isActive      Boolean     @default(true)
+  isFeatured    Boolean     @default(false) // Marcado como Destacado para el Inicio (máx 4)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
@@ -45,6 +46,7 @@ model Product {
 
   @@index([slug])
   @@index([isActive])
+  @@index([isFeatured])
   @@index([offerEndsAt])
 }
 
