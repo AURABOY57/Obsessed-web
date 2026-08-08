@@ -88,42 +88,9 @@ const DEMO_PRODUCTS: AdminProduct[] = [
   },
 ];
 
-const DEMO_ORDERS: AdminOrderSummary[] = [
-  {
-    id: "ord-1",
-    orderNumber: "ORD-2408-7821",
-    customerName: "Matías Gómez",
-    customerPhone: "351-4567890",
-    status: "PENDING",
-    total: 48000,
-    createdAt: new Date(),
-    itemsCount: 1,
-  },
-  {
-    id: "ord-2",
-    orderNumber: "ORD-2408-6512",
-    customerName: "Valentina Rossi",
-    customerPhone: "3541-678912",
-    status: "CONFIRMED",
-    total: 86500,
-    createdAt: new Date(Date.now() - 3600000 * 4),
-    itemsCount: 2,
-  },
-  {
-    id: "ord-3",
-    orderNumber: "ORD-2408-5420",
-    customerName: "Facundo Morales",
-    customerPhone: "351-9988776",
-    status: "SHIPPED",
-    total: 68000,
-    createdAt: new Date(Date.now() - 86400000),
-    itemsCount: 1,
-  },
-];
-
 export default async function AdminDashboardPage() {
   let allProducts: AdminProduct[] = DEMO_PRODUCTS;
-  let allOrders: AdminOrderSummary[] = DEMO_ORDERS;
+  let allOrders: AdminOrderSummary[] = [];
 
   try {
     const [productsData, ordersData] = await Promise.all([
@@ -148,7 +115,7 @@ export default async function AdminDashboardPage() {
       }));
     }
 
-    if (ordersData.length > 0) {
+    if (ordersData && ordersData.length > 0) {
       allOrders = ordersData.map((o) => ({
         id: o.id,
         orderNumber: o.orderNumber,
