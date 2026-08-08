@@ -8,13 +8,12 @@ import { ArrowLeft } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 interface EditProductPageProps {
-  params: Promise<{
-    id: string;
-  }>;
+  params: { id: string } | Promise<{ id: string }>;
 }
 
 export default async function EditProductPage({ params }: EditProductPageProps) {
-  const { id } = await params;
+  const resolvedParams = params instanceof Promise ? await params : params;
+  const id = resolvedParams?.id;
 
   let product: any = null;
 

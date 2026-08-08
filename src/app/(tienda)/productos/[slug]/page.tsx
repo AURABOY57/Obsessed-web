@@ -10,15 +10,14 @@ import { OfferCountdown } from "@/components/shop/OfferCountdown";
 import { ArrowLeft, ShieldCheck, Truck, MessageCircle } from "lucide-react";
 
 interface ProductPageProps {
-  params: Promise<{
-    slug: string;
-  }>;
+  params: { slug: string } | Promise<{ slug: string }>;
 }
 
 export const dynamic = "force-dynamic";
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
-  const { slug } = await params;
+  const resolvedParams = params instanceof Promise ? await params : params;
+  const slug = resolvedParams?.slug;
 
   let product: {
     id: string;
