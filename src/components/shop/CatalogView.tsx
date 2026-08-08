@@ -11,6 +11,7 @@ import {
   Check,
   PackageCheck,
   ArrowUpDown,
+  Tag,
 } from "lucide-react";
 
 export interface ProductItem {
@@ -36,6 +37,7 @@ interface CatalogViewProps {
 export function CatalogView({ initialProducts }: CatalogViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("TODOS");
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"featured" | "price-asc" | "price-desc" | "name">("featured");
   const [onlyInStock, setOnlyInStock] = useState(false);
   const [priceRange, setPriceRange] = useState<number | null>(null);
@@ -45,6 +47,15 @@ export function CatalogView({ initialProducts }: CatalogViewProps) {
   const [isSortOpen, setIsSortOpen] = useState(true);
   const [isPriceOpen, setIsPriceOpen] = useState(true);
   const [isStockOpen, setIsStockOpen] = useState(true);
+
+  // Despliegue de subcategorías por categoría (abiertas por defecto)
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
+    Mates: true,
+    Bombillas: true,
+    Termos: true,
+    Yerbas: true,
+    Accesorios: true,
+  });
 
   // Estado del drawer de filtros en móvil
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
@@ -66,6 +77,35 @@ export function CatalogView({ initialProducts }: CatalogViewProps) {
     return counts;
   }, [initialProducts]);
 
+  // Subcategorías agrupadas por categoría con sus cantidades exactas
+  const subcategoriesByCategory = useMemo(() => {
+    const map: Record<string, { name: string; count: number }[]> = {};
+
+    initialProducts.forEach((p) => {
+      const cat = p.category?.trim() || "Otros";
+      if (!map[cat]) map[cat] = [];
+
+      const sub = p.subCategory?.trim();
+      if (sub) {
+        const existing = map[cat].find(
+          (item) => item.name.toLowerCase() === sub.toLowerCase()
+        );
+        if (existing) {
+          existing.count += 1;
+        } else {
+          map[cat].push({ name: sub, count: 1 });
+        }
+      }
+    });
+
+    // Ordenar subcategorías alfabéticamente
+    Object.keys(map).forEach((cat) => {
+      map[cat].sort((a, b) => a.name.localeCompare(b.name));
+    });
+
+    return map;
+  }, [initialProducts]);
+
   const categories = useMemo(() => {
     const set = new Set<string>();
     initialProducts.forEach((p) => {
@@ -76,21 +116,41 @@ export function CatalogView({ initialProducts }: CatalogViewProps) {
     return ["TODOS", ...Array.from(set)];
   }, [initialProducts]);
 
+  // Alternar apertura de subcategorías
+  const toggleExpandCategory = (cat: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [cat]: !prev[cat],
+    }));
+  };
+
   // Filtrado y ordenamiento en tiempo real
   const filteredProducts = useMemo(() => {
     return initialProducts
       .filter((product) => {
-        // Filtro por búsqueda
+        // Filtro por búsqueda de texto
         if (searchQuery.trim()) {
           const query = searchQuery.toLowerCase();
           const matchName = product.name.toLowerCase().includes(query);
           const matchCat = product.category?.toLowerCase().includes(query);
-          if (!matchName && !matchCat) return false;
+          const matchSub = product.subCategory?.toLowerCase().includes(query);
+          if (!matchName && !matchCat && !matchSub) return false;
         }
 
-        // Filtro por categoría
+        // Filtro por categoría principal
         if (selectedCategory !== "TODOS") {
           if (product.category?.toUpperCase() !== selectedCategory.toUpperCase()) {
+            return false;
+          }
+        }
+
+        // Filtro por Subcategoría / Tipo
+        if (selectedSubCategory) {
+          if (
+            !product.subCategory ||
+            product.subCategory.trim().toLowerCase() !== selectedSubCategory.trim().toLowerCase()
+          ) {
             return false;
           }
         }
@@ -113,21 +173,23 @@ export function CatalogView({ initialProducts }: CatalogViewProps) {
         if (sortBy === "name") return a.name.localeCompare(b.name);
         return 0; // featured / default order
       });
-  }, [initialProducts, searchQuery, selectedCategory, sortBy, onlyInStock, priceRange]);
+  }, [initialProducts, searchQuery, selectedCategory, selectedSubCategory, sortBy, onlyInStock, priceRange]);
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (searchQuery !== "") count++;
     if (selectedCategory !== "TODOS") count++;
+    if (selectedSubCategory !== null) count++;
     if (sortBy !== "featured") count++;
     if (onlyInStock) count++;
     if (priceRange !== null) count++;
     return count;
-  }, [searchQuery, selectedCategory, sortBy, onlyInStock, priceRange]);
+  }, [searchQuery, selectedCategory, selectedSubCategory, sortBy, onlyInStock, priceRange]);
 
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedCategory("TODOS");
+    setSelectedSubCategory(null);
     setSortBy("featured");
     setOnlyInStock(false);
     setPriceRange(null);
@@ -168,14 +230,15 @@ export function CatalogView({ initialProducts }: CatalogViewProps) {
 
       <div className="h-px bg-brand-border" />
 
-      {/* 2. Desplegable de Categorías */}
+      {/* 2. Desplegable de Categorías & Subcategorías / Tipo */}
       <div className="space-y-3">
         <button
           onClick={() => setIsCategoryOpen(!isCategoryOpen)}
           className="w-full flex items-center justify-between text-left group"
         >
-          <span className="text-[11px] font-mono uppercase tracking-widest text-brand-black font-semibold group-hover:text-brand-muted transition-colors">
-            Categorías
+          <span className="text-[11px] font-mono uppercase tracking-widest text-brand-black font-semibold group-hover:text-brand-muted transition-colors flex items-center gap-1.5">
+            <Tag size={13} />
+            <span>Categorías & Tipos</span>
           </span>
           <ChevronDown
             size={14}
@@ -186,34 +249,137 @@ export function CatalogView({ initialProducts }: CatalogViewProps) {
         </button>
 
         {isCategoryOpen && (
-          <div className="space-y-1.5 pt-1 animate-fadeIn">
-            {categories.map((cat) => {
-              const isSelected = selectedCategory.toUpperCase() === cat.toUpperCase();
-              const count = categoryCounts[cat] || 0;
-              return (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-mono uppercase tracking-wider transition-all rounded-sm ${
-                    isSelected
-                      ? "bg-brand-black text-brand-white font-semibold shadow-xs"
-                      : "text-brand-muted hover:text-brand-black hover:bg-neutral-100"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    {isSelected && <Check size={12} className="stroke-[3]" />}
-                    {cat}
-                  </span>
-                  <span
-                    className={`text-[10px] ${
-                      isSelected ? "text-neutral-300" : "text-brand-muted"
-                    }`}
-                  >
-                    ({count})
-                  </span>
-                </button>
-              );
-            })}
+          <div className="space-y-1 pt-1 animate-fadeIn">
+            {/* Opción TODOS */}
+            <button
+              onClick={() => {
+                setSelectedCategory("TODOS");
+                setSelectedSubCategory(null);
+              }}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-mono uppercase tracking-wider transition-all rounded-sm ${
+                selectedCategory === "TODOS"
+                  ? "bg-brand-black text-brand-white font-semibold shadow-xs"
+                  : "text-brand-muted hover:text-brand-black hover:bg-neutral-100"
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                {selectedCategory === "TODOS" && <Check size={12} className="stroke-[3]" />}
+                TODAS LAS PIEZAS
+              </span>
+              <span
+                className={`text-[10px] ${
+                  selectedCategory === "TODOS" ? "text-neutral-300" : "text-brand-muted"
+                }`}
+              >
+                ({initialProducts.length})
+              </span>
+            </button>
+
+            {/* Categorías con subcategorías desplegables */}
+            {categories
+              .filter((cat) => cat !== "TODOS")
+              .map((cat) => {
+                const isCategorySelected =
+                  selectedCategory.toUpperCase() === cat.toUpperCase() && !selectedSubCategory;
+                const isCategoryActive = selectedCategory.toUpperCase() === cat.toUpperCase();
+                const count = categoryCounts[cat] || 0;
+                const subcats = subcategoriesByCategory[cat] || [];
+                const isExpanded = expandedCategories[cat] ?? true;
+
+                return (
+                  <div key={cat} className="space-y-0.5">
+                    {/* Botón de la categoría principal */}
+                    <div
+                      className={`w-full flex items-center justify-between px-2 py-1.5 text-xs font-mono uppercase tracking-wider transition-all rounded-sm ${
+                        isCategorySelected
+                          ? "bg-brand-black text-brand-white font-semibold shadow-xs"
+                          : isCategoryActive
+                          ? "bg-neutral-100 text-brand-black font-semibold border-l-2 border-brand-black"
+                          : "text-brand-black hover:bg-neutral-100"
+                      }`}
+                    >
+                      <button
+                        onClick={() => {
+                          setSelectedCategory(cat);
+                          setSelectedSubCategory(null);
+                          if (!isExpanded) {
+                            setExpandedCategories((prev) => ({ ...prev, [cat]: true }));
+                          }
+                        }}
+                        className="flex-1 text-left flex items-center gap-2 truncate"
+                      >
+                        {isCategorySelected && <Check size={12} className="stroke-[3]" />}
+                        <span className="truncate">{cat}</span>
+                        <span
+                          className={`text-[10px] ${
+                            isCategorySelected ? "text-neutral-300" : "text-brand-muted"
+                          }`}
+                        >
+                          ({count})
+                        </span>
+                      </button>
+
+                      {subcats.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={(e) => toggleExpandCategory(cat, e)}
+                          className="p-1 text-brand-muted hover:text-brand-black transition-colors"
+                          title={isExpanded ? "Ocultar tipos" : "Desplegar tipos"}
+                        >
+                          <ChevronDown
+                            size={12}
+                            className={`transition-transform duration-200 ${
+                              isExpanded ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Subcategorías / Tipos indentados */}
+                    {isExpanded && subcats.length > 0 && (
+                      <div className="pl-3.5 pr-1 py-1 space-y-0.5 border-l-2 border-neutral-200 ml-2 animate-fadeIn">
+                        {subcats.map((sub) => {
+                          const isSubSelected =
+                            selectedCategory.toUpperCase() === cat.toUpperCase() &&
+                            selectedSubCategory?.toLowerCase() === sub.name.toLowerCase();
+
+                          return (
+                            <button
+                              key={sub.name}
+                              onClick={() => {
+                                setSelectedCategory(cat);
+                                setSelectedSubCategory(sub.name);
+                              }}
+                              className={`w-full flex items-center justify-between px-2 py-1 text-[11px] font-mono tracking-wider transition-all rounded-xs ${
+                                isSubSelected
+                                  ? "bg-brand-black text-brand-white font-bold"
+                                  : "text-brand-muted hover:text-brand-black hover:bg-neutral-100"
+                              }`}
+                            >
+                              <span className="flex items-center gap-1.5 truncate">
+                                <span
+                                  className={`w-1 h-1 rounded-full ${
+                                    isSubSelected ? "bg-brand-white" : "bg-neutral-400"
+                                  }`}
+                                />
+                                <span className="truncate">{sub.name}</span>
+                              </span>
+                              <span
+                                className={`text-[10px] ${
+                                  isSubSelected ? "text-neutral-300" : "text-brand-muted"
+                                }`}
+                              >
+                                ({sub.count})
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
           </div>
         )}
       </div>
@@ -374,7 +540,7 @@ export function CatalogView({ initialProducts }: CatalogViewProps) {
           className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-brand-black text-brand-white text-xs font-mono uppercase tracking-widest hover:bg-neutral-900 transition-all shadow-xs"
         >
           <SlidersHorizontal size={14} />
-          <span>Filtros y Desplegables</span>
+          <span>Filtros y Categorías</span>
           {activeFiltersCount > 0 && (
             <span className="w-5 h-5 rounded-full bg-brand-white text-brand-black text-[10px] font-bold flex items-center justify-center">
               {activeFiltersCount}
@@ -410,9 +576,25 @@ export function CatalogView({ initialProducts }: CatalogViewProps) {
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-brand-black text-brand-white text-[10px] font-mono uppercase tracking-wider">
               Categoría: {selectedCategory}
               <button
-                onClick={() => setSelectedCategory("TODOS")}
+                onClick={() => {
+                  setSelectedCategory("TODOS");
+                  setSelectedSubCategory(null);
+                }}
                 className="hover:text-red-300 ml-0.5"
                 aria-label="Quitar filtro de categoría"
+              >
+                <X size={11} />
+              </button>
+            </span>
+          )}
+
+          {selectedSubCategory && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-neutral-800 text-brand-white text-[10px] font-mono uppercase tracking-wider border border-neutral-700">
+              Tipo: {selectedSubCategory}
+              <button
+                onClick={() => setSelectedSubCategory(null)}
+                className="hover:text-red-300 ml-0.5"
+                aria-label="Quitar filtro de tipo"
               >
                 <X size={11} />
               </button>
@@ -504,7 +686,7 @@ export function CatalogView({ initialProducts }: CatalogViewProps) {
             </span>
           </div>
 
-          {/* Grid de Productos Responsivo (1 col móvil, 2 col tablet/desktop pequeño, 3 col desktop) */}
+          {/* Grid de Productos Responsivo */}
           {filteredProducts.length === 0 ? (
             <div className="border border-dashed border-brand-border bg-brand-surface py-20 px-6 text-center space-y-4">
               <div className="w-12 h-12 mx-auto rounded-full bg-neutral-200 flex items-center justify-center text-brand-muted">
@@ -553,7 +735,7 @@ export function CatalogView({ initialProducts }: CatalogViewProps) {
               <div className="flex items-center gap-2">
                 <SlidersHorizontal size={15} />
                 <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-brand-black">
-                  Filtros y Desplegables
+                  Filtros y Categorías
                 </h3>
               </div>
               <button

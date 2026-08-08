@@ -32,7 +32,7 @@ interface ProductInventoryViewProps {
 const CATEGORIES = ["TODOS", "⭐ DESTACADOS (INICIO)", "Mates", "Bombillas", "Yerbas", "Termos", "Accesorios", "STOCK BAJO (< 2)"];
 
 const SUBFILTERS_BY_CATEGORY: Record<string, string[]> = {
-  Mates: ["Todos los mates", "Calabaza", "Madera", "Acero", "Cerámica", "Imperial", "Torpedo", "Camionero"],
+  Mates: ["Todos los mates", "Imperial", "Torpedo", "Camionero", "Madera", "Acero", "Cerámica"],
   Bombillas: ["Todas las bombillas", "Alpaca", "Acero", "Pico de Loro", "Resorte"],
   Yerbas: ["Todas las yerbas", "Con Palo", "Despalada", "Compuesta"],
   Termos: ["Todos los termos", "Acero Inox", "1L", "Pico Cebador"],

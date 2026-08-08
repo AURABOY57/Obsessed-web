@@ -128,7 +128,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
     } else if (type === "color") {
       setVariants((prev) => [...prev, { name: "Color", options: ["Negro", "Marrón", "Suela"] }]);
     } else if (type === "material") {
-      setVariants((prev) => [...prev, { name: "Material", options: ["Calabaza", "Alpaca Maciza"] }]);
+      setVariants((prev) => [...prev, { name: "Material", options: ["Cuero Vacuno", "Alpaca Maciza"] }]);
     }
   };
 
@@ -350,7 +350,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
               <input
                 type="text"
                 list="subcategories-list"
-                placeholder="Ej: Calabaza, Madera, Imperial..."
+                placeholder="Ej: Imperial, Torpedo, Camionero..."
                 value={subCategory}
                 onChange={(e) => setSubCategory(e.target.value)}
                 disabled={isLoading}
