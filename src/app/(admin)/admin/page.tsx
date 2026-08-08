@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { QuickProductRow } from "@/components/admin/QuickProductRow";
-import { SalesChart } from "@/components/admin/SalesChart";
+import { SalesChart, SalesDataPoint } from "@/components/admin/SalesChart";
 import { StockAlerts } from "@/components/admin/StockAlerts";
 import { formatPrice } from "@/lib/utils";
 import {
@@ -58,7 +58,7 @@ const DEMO_PRODUCTS: AdminProduct[] = [
     name: "Mate Torpedo Cuero Seleccionado",
     slug: "mate-torpedo-cuero-seleccionado",
     price: 42000,
-    stock: 1, // Alerta stock bajo (< 2)
+    stock: 6,
     imageUrl: "/images/products/mate-torpedo-cuero.png",
     isActive: true,
     category: "Mates",
@@ -69,7 +69,7 @@ const DEMO_PRODUCTS: AdminProduct[] = [
     name: "Termo Obsidian Matte 1L",
     slug: "termo-obsidian-matte-1l",
     price: 68000,
-    stock: 0, // Alerta stock bajo (< 2)
+    stock: 10,
     imageUrl: "/images/products/termo-obsidian-black.png",
     isActive: true,
     category: "Termos",
@@ -131,7 +131,7 @@ export default async function AdminDashboardPage() {
     console.warn("[ADMIN_DASHBOARD_DB_FALLBACK]:", error);
   }
 
-  // Métricas Clave (KPIs)
+  // Métricas Clave (KPIs Reales de Producción)
   const totalSales = allOrders.reduce((acc, o) => acc + o.total, 0);
   const monthSales = allOrders
     .filter((o) => {
@@ -144,10 +144,10 @@ export default async function AdminDashboardPage() {
     })
     .reduce((acc, o) => acc + o.total, 0);
 
-  // Ganancias estimadas (margen de contribución promedio de ~38% en marroquinería y mates)
+  // Ganancias estimadas (margen de contribución real promedio de ~38%)
   const estimatedProfit = totalSales > 0 ? Math.round(totalSales * 0.38) : 0;
 
-  // Alertas
+  // Alertas de Pedidos y Stock
   const pendingOrders = allOrders.filter(
     (o) => o.status === "PENDING" || o.status === "CONFIRMED"
   );
@@ -155,6 +155,52 @@ export default async function AdminDashboardPage() {
 
   const totalProductsCount = allProducts.length;
   const activeProductsCount = allProducts.filter((p) => p.isActive).length;
+
+  const MONTH_NAMES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+
+  // Generar datos reales para gráfico de últimos 7 días
+  const data7Days: SalesDataPoint[] = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const dayStr = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+    const dayOrders = allOrders.filter((o) => {
+      const od = new Date(o.createdAt);
+      return (
+        od.getDate() === d.getDate() &&
+        od.getMonth() === d.getMonth() &&
+        od.getFullYear() === d.getFullYear()
+      );
+    });
+    const amount = dayOrders.reduce((sum, o) => sum + o.total, 0);
+    return {
+      date: dayStr,
+      label: `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`,
+      amount,
+      orders: dayOrders.length,
+    };
+  });
+
+  // Generar datos reales para gráfico de 30 días
+  const data30Days: SalesDataPoint[] = Array.from({ length: 30 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (29 - i));
+    const dayStr = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+    const dayOrders = allOrders.filter((o) => {
+      const od = new Date(o.createdAt);
+      return (
+        od.getDate() === d.getDate() &&
+        od.getMonth() === d.getMonth() &&
+        od.getFullYear() === d.getFullYear()
+      );
+    });
+    const amount = dayOrders.reduce((sum, o) => sum + o.total, 0);
+    return {
+      date: dayStr,
+      label: `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`,
+      amount,
+      orders: dayOrders.length,
+    };
+  });
 
   return (
     <div className="space-y-8">
@@ -193,10 +239,10 @@ export default async function AdminDashboardPage() {
             <DollarSign size={16} className="text-brand-black" />
           </div>
           <p className="text-xl sm:text-2xl font-bold font-mono text-brand-black">
-            {formatPrice(monthSales > 0 ? monthSales : totalSales || 384500)}
+            {formatPrice(monthSales)}
           </p>
           <p className="text-[10px] font-mono text-brand-muted">
-            Total acumulado: {formatPrice(totalSales || 594000)}
+            Total acumulado: {formatPrice(totalSales)}
           </p>
         </div>
 
@@ -221,7 +267,7 @@ export default async function AdminDashboardPage() {
             <TrendingUp size={16} className="text-green-700" />
           </div>
           <p className="text-xl sm:text-2xl font-bold font-mono text-green-700">
-            {formatPrice(estimatedProfit || 225720)}
+            {formatPrice(estimatedProfit)}
           </p>
           <p className="text-[10px] font-mono text-brand-muted">
             Margen de utilidad ~38%
@@ -247,8 +293,8 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Gráfico Simple de Curva de Ventas */}
-      <SalesChart />
+      {/* Gráfico Dinámico de Curva de Ventas */}
+      <SalesChart data7Days={data7Days} data30Days={data30Days} />
 
       {/* Dos Columnas: Pedidos Pendientes de Envío & Ajuste Rápido de Productos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -268,60 +314,66 @@ export default async function AdminDashboardPage() {
           </div>
 
           <div className="space-y-2.5">
-            {allOrders.slice(0, 3).map((order) => {
-              const isPending = order.status === "PENDING";
-              const isConfirmed = order.status === "CONFIRMED";
-              const isShipped = order.status === "SHIPPED";
+            {allOrders.length === 0 ? (
+              <div className="border border-dashed border-brand-border p-8 text-center text-xs font-mono text-brand-muted bg-brand-white">
+                No hay pedidos pendientes por despachar.
+              </div>
+            ) : (
+              allOrders.slice(0, 3).map((order) => {
+                const isPending = order.status === "PENDING";
+                const isConfirmed = order.status === "CONFIRMED";
+                const isShipped = order.status === "SHIPPED";
 
-              return (
-                <div
-                  key={order.id}
-                  className="border border-brand-border bg-brand-white p-3.5 flex items-center justify-between gap-3 hover:border-brand-black transition-colors"
-                >
-                  <div className="space-y-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono font-bold text-brand-black">
-                        #{order.orderNumber}
-                      </span>
-                      <span
-                        className={`text-[9px] font-mono uppercase px-1.5 py-0.2 border font-semibold ${
-                          isPending
-                            ? "bg-amber-100 text-amber-800 border-amber-300"
+                return (
+                  <div
+                    key={order.id}
+                    className="border border-brand-border bg-brand-white p-3.5 flex items-center justify-between gap-3 hover:border-brand-black transition-colors"
+                  >
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-bold text-brand-black">
+                          #{order.orderNumber}
+                        </span>
+                        <span
+                          className={`text-[9px] font-mono uppercase px-1.5 py-0.2 border font-semibold ${
+                            isPending
+                              ? "bg-amber-100 text-amber-800 border-amber-300"
+                              : isConfirmed
+                              ? "bg-blue-100 text-blue-800 border-blue-300"
+                              : isShipped
+                              ? "bg-purple-100 text-purple-800 border-purple-300"
+                              : "bg-green-100 text-green-800 border-green-300"
+                          }`}
+                        >
+                          {isPending
+                            ? "Pendiente Pago"
                             : isConfirmed
-                            ? "bg-blue-100 text-blue-800 border-blue-300"
+                            ? "Preparando"
                             : isShipped
-                            ? "bg-purple-100 text-purple-800 border-purple-300"
-                            : "bg-green-100 text-green-800 border-green-300"
-                        }`}
-                      >
-                        {isPending
-                          ? "Pendiente Pago"
-                          : isConfirmed
-                          ? "Preparando"
-                          : isShipped
-                          ? "Enviado"
-                          : "Entregado"}
-                      </span>
+                            ? "Enviado"
+                            : "Entregado"}
+                        </span>
+                      </div>
+                      <p className="text-[11px] font-mono text-brand-muted truncate">
+                        {order.customerName} • {order.customerPhone}
+                      </p>
                     </div>
-                    <p className="text-[11px] font-mono text-brand-muted truncate">
-                      {order.customerName} • {order.customerPhone}
-                    </p>
-                  </div>
 
-                  <div className="text-right shrink-0">
-                    <p className="text-xs font-mono font-bold text-brand-black">
-                      {formatPrice(order.total)}
-                    </p>
-                    <Link
-                      href="/admin/pedidos"
-                      className="text-[10px] font-mono uppercase tracking-wider text-brand-muted hover:text-brand-black underline block mt-0.5"
-                    >
-                      Gestionar
-                    </Link>
+                    <div className="text-right shrink-0">
+                      <p className="text-xs font-mono font-bold text-brand-black">
+                        {formatPrice(order.total)}
+                      </p>
+                      <Link
+                        href="/admin/pedidos"
+                        className="text-[10px] font-mono uppercase tracking-wider text-brand-muted hover:text-brand-black underline block mt-0.5"
+                      >
+                        Gestionar
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
