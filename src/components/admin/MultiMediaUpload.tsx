@@ -4,15 +4,8 @@ import React, { useState, useRef, ChangeEvent, DragEvent } from "react";
 import Image from "next/image";
 import { Plus, Trash2, ArrowLeft, ArrowRight, Video, Image as ImageIcon, Play, Upload } from "lucide-react";
 
-export function isVideoUrl(url: string): boolean {
-  if (!url) return false;
-  return (
-    /\.(mp4|webm|mov|ogg|m4v)(\?.*)?$/i.test(url) ||
-    url.includes("/video/upload/") ||
-    url.startsWith("data:video/") ||
-    url.includes("resource_type=video")
-  );
-}
+import { isVideoUrl } from "@/lib/media-utils";
+export { isVideoUrl };
 
 interface MultiMediaUploadProps {
   mediaList: string[];

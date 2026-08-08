@@ -6,7 +6,7 @@ import { AddToCartButton } from "@/components/shop/AddToCartButton";
 import { DirectWhatsAppButton } from "@/components/shop/DirectWhatsAppButton";
 import { OfferCountdown } from "@/components/shop/OfferCountdown";
 import { Flame, Video } from "lucide-react";
-import { isVideoUrl } from "@/components/admin/MultiMediaUpload";
+import { isVideoUrl } from "@/lib/media-utils";
 
 interface ProductCardProps {
   product: {

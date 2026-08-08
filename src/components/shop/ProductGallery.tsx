@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { isVideoUrl } from "@/components/admin/MultiMediaUpload";
+import { isVideoUrl } from "@/lib/media-utils";
 import { Video, Flame, Play, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ProductGalleryProps {
