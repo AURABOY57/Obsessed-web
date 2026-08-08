@@ -41,14 +41,25 @@ export function ProductCard({ product }: ProductCardProps) {
         href={`/productos/${product.slug}`}
         className="relative w-full aspect-[4/5] bg-brand-surface overflow-hidden flex items-center justify-center cursor-pointer block"
       >
-        <Image
-          src={product.imageUrl}
-          alt={product.name}
-          fill
-          unoptimized
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-        />
+        {product.imageUrl && product.imageUrl.trim() !== "" ? (
+          <Image
+            src={product.imageUrl}
+            alt={product.name}
+            fill
+            unoptimized
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center text-neutral-400 bg-neutral-100 p-4 text-center">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-500 font-bold">
+              {product.name}
+            </span>
+            <span className="text-[9px] font-mono text-neutral-400 mt-1">
+              (Sin imagen)
+            </span>
+          </div>
+        )}
 
         {/* Badge de Stock Agotado */}
         {isOutOfStock && (

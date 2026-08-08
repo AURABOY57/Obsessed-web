@@ -121,14 +121,20 @@ export function QuickProductRow({
           />
         </label>
 
-        <div className="relative w-14 h-14 border border-brand-border flex-shrink-0 bg-brand-surface">
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            fill
-            unoptimized
-            className="object-cover"
-          />
+        <div className="relative w-14 h-14 border border-brand-border flex-shrink-0 bg-brand-surface flex items-center justify-center overflow-hidden">
+          {product.imageUrl && product.imageUrl.trim() !== "" ? (
+            <Image
+              src={product.imageUrl}
+              alt={product.name}
+              fill
+              unoptimized
+              className="object-cover"
+            />
+          ) : (
+            <span className="text-[8px] font-mono text-neutral-400 text-center uppercase p-1">
+              Sin foto
+            </span>
+          )}
           {isCriticalStock && (
             <div className="absolute top-0 right-0 bg-amber-600 text-brand-white p-0.5" title="Stock bajo (< 2)">
               <AlertCircle size={10} />

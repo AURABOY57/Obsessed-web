@@ -12,9 +12,7 @@ import {
   ShoppingBag,
   Clock,
   Truck,
-  PlusCircle,
   ArrowRight,
-  ClipboardList,
   AlertTriangle,
 } from "lucide-react";
 
@@ -194,35 +192,16 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       {/* Encabezado Principal */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brand-border pb-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <h1 className="text-xl font-bold uppercase tracking-widest font-mono text-brand-black">
-              Panel de Resumen
-            </h1>
-          </div>
-          <p className="text-xs font-mono text-brand-muted mt-1">
-            Radiografía en tiempo real de ventas, stock y pedidos de <strong>obsessed.cba</strong>
-          </p>
+      <div className="border-b border-brand-border pb-6">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          <h1 className="text-xl font-bold uppercase tracking-widest font-mono text-brand-black">
+            Panel de Resumen
+          </h1>
         </div>
-
-        <div className="flex items-center gap-2.5 self-start sm:self-auto">
-          <Link
-            href="/admin/pedidos"
-            className="inline-flex items-center gap-1.5 border border-brand-border px-3.5 py-2 text-xs font-mono uppercase tracking-wider hover:border-brand-black transition-colors"
-          >
-            <ClipboardList size={14} />
-            <span>Ver Pedidos</span>
-          </Link>
-          <Link
-            href="/admin/productos/nuevo"
-            className="inline-flex items-center gap-1.5 bg-brand-black text-brand-white px-4 py-2 text-xs font-mono uppercase tracking-wider hover:bg-neutral-800 transition-colors border border-brand-black"
-          >
-            <PlusCircle size={14} />
-            <span>+ Cargar Producto</span>
-          </Link>
-        </div>
+        <p className="text-xs font-mono text-brand-muted mt-1">
+          Radiografía en tiempo real de ventas, stock y pedidos de <strong>obsessed.cba</strong>
+        </p>
       </div>
 
       {/* Alertas Urgentes de Stock Bajo (< 2) */}
