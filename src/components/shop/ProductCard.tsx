@@ -201,7 +201,7 @@ export function ProductCard({ product }: ProductCardProps) {
               product={product}
               isOutOfStock={true}
               label="Consultar Próximo Ingreso"
-              className="w-full text-[10px] py-2 bg-brand-surface text-brand-black border-brand-border hover:border-brand-black hover:bg-brand-black hover:text-brand-white"
+              className="w-full text-[10px] py-2.5 bg-brand-black text-brand-white border-brand-black hover:bg-neutral-800"
             />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

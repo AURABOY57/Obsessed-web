@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { buildWhatsAppLink, buildStockInquiryWhatsAppLink } from "@/lib/utils";
+import { cn, buildWhatsAppLink, buildStockInquiryWhatsAppLink } from "@/lib/utils";
 import { MessageCircle } from "lucide-react";
 
 interface DirectWhatsAppButtonProps {
@@ -60,9 +60,15 @@ export function DirectWhatsAppButton({
   return (
     <button
       onClick={handleDirectWhatsApp}
-      className={`inline-flex items-center justify-center gap-2 border border-brand-black bg-brand-black text-brand-white px-4 py-2.5 text-xs font-mono uppercase tracking-widest hover:bg-brand-white hover:text-brand-black transition-colors cursor-pointer ${className}`}
+      className={cn(
+        "inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-mono uppercase tracking-widest transition-all cursor-pointer border select-none",
+        isOutOfStock
+          ? "bg-brand-black text-brand-white border-brand-black hover:bg-neutral-800 shadow-xs"
+          : "bg-brand-black text-brand-white border-brand-black hover:bg-brand-white hover:text-brand-black",
+        className
+      )}
     >
-      <MessageCircle size={14} />
+      <MessageCircle size={14} className="flex-shrink-0" />
       <span>{displayLabel}</span>
     </button>
   );
