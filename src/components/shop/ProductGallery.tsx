@@ -1,9 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { isVideoUrl } from "@/lib/media-utils";
-import { Video, Flame, Play, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Flame,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 interface ProductGalleryProps {
   productName: string;
@@ -29,35 +37,134 @@ export function ProductGallery({
       : [];
 
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const activeMedia = mediaList[activeIndex] || imageUrl || "";
   const isActiveVideo = isVideoUrl(activeMedia);
 
-  const handleNext = () => {
+  // Reiniciar estado de reproducción al cambiar de medio
+  useEffect(() => {
+    setIsPlaying(true);
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(() => {
+        // Fallback por políticas del navegador
+      });
+    }
+  }, [activeIndex, activeMedia]);
+
+  const togglePlayPause = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!videoRef.current) return;
+
+    if (videoRef.current.paused) {
+      videoRef.current.play().then(() => {
+        setIsPlaying(true);
+      }).catch(() => {
+        setIsPlaying(false);
+      });
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!videoRef.current) return;
+    const newMuted = !videoRef.current.muted;
+    videoRef.current.muted = newMuted;
+    setIsMuted(newMuted);
+  };
+
+  const handleNext = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setActiveIndex((prev) => (prev + 1) % mediaList.length);
   };
 
-  const handlePrev = () => {
+  const handlePrev = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setActiveIndex((prev) => (prev - 1 + mediaList.length) % mediaList.length);
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 select-none">
       {/* Visor Principal */}
       <div className="relative w-full aspect-[4/5] border border-brand-border bg-brand-surface overflow-hidden group">
         {activeMedia ? (
           isActiveVideo ? (
-            <div className="relative w-full h-full flex items-center justify-center bg-neutral-950">
+            <div
+              onClick={togglePlayPause}
+              className="relative w-full h-full flex items-center justify-center bg-black cursor-pointer overflow-hidden"
+              title={isPlaying ? "Toca para pausar" : "Toca para reproducir"}
+            >
+              {/* Elemento de Video Limpio (Sin controles nativos ni barras de borde) */}
               <video
+                ref={videoRef}
                 key={activeMedia}
                 src={activeMedia}
-                controls
                 autoPlay
                 loop
-                muted
+                muted={isMuted}
                 playsInline
-                className="w-full h-full object-contain"
+                disablePictureInPicture
+                controlsList="nodownload nofullscreen noremoteplayback"
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                className="w-full h-full object-contain pointer-events-none"
               />
+
+              {/* Botón Central de Play cuando está en pausa */}
+              {!isPlaying && (
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-2xs flex flex-col items-center justify-center animate-fadeIn z-10">
+                  <div className="w-16 h-16 rounded-full bg-brand-white/90 hover:bg-brand-white text-brand-black flex items-center justify-center shadow-2xl transition-transform hover:scale-105">
+                    <Play size={28} className="fill-brand-black ml-1" />
+                  </div>
+                  <span className="text-[11px] font-mono uppercase tracking-widest text-brand-white mt-3 bg-black/60 px-3 py-1 rounded-xs">
+                    Pausado • Toca para ver
+                  </span>
+                </div>
+              )}
+
+              {/* Controles Minimalistas Flotantes (Solo aparecen en Hover o Pausa) */}
+              <div
+                className={`absolute bottom-3 right-3 flex items-center gap-2 z-20 transition-opacity duration-300 ${
+                  isPlaying ? "opacity-0 group-hover:opacity-100" : "opacity-100"
+                }`}
+              >
+                {/* Botón de Audio Mute/Unmute */}
+                <button
+                  type="button"
+                  onClick={toggleMute}
+                  aria-label={isMuted ? "Activar audio" : "Silenciar audio"}
+                  className="w-8 h-8 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center backdrop-blur-xs transition-colors"
+                  title={isMuted ? "Activar sonido" : "Silenciar"}
+                >
+                  {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                </button>
+
+                {/* Botón de Pausa/Play Rápido */}
+                <button
+                  type="button"
+                  onClick={togglePlayPause}
+                  aria-label={isPlaying ? "Pausar video" : "Reproducir video"}
+                  className="px-3 h-8 rounded-full bg-black/70 hover:bg-black text-white text-[10px] font-mono uppercase tracking-wider flex items-center gap-1.5 backdrop-blur-xs transition-colors"
+                >
+                  {isPlaying ? (
+                    <>
+                      <Pause size={12} className="fill-white" />
+                      <span>Pausar</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play size={12} className="fill-white" />
+                      <span>Reanudar</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           ) : (
             <Image
@@ -89,9 +196,9 @@ export function ProductGallery({
           </div>
         )}
 
-        {/* Indicador de posición y formato */}
+        {/* Indicador de posición y formato (Discreto arriba a la izquierda) */}
         {mediaList.length > 1 && (
-          <div className="absolute bottom-4 left-4 bg-brand-black/75 backdrop-blur-xs text-brand-white text-[10px] font-mono uppercase tracking-widest px-2.5 py-1 z-10">
+          <div className="absolute top-4 left-4 bg-brand-black/75 backdrop-blur-xs text-brand-white text-[10px] font-mono uppercase tracking-widest px-2.5 py-1 z-10 pointer-events-none">
             {activeIndex + 1} / {mediaList.length}
             {isActiveVideo && " • VIDEO"}
           </div>
@@ -104,7 +211,7 @@ export function ProductGallery({
               type="button"
               onClick={handlePrev}
               aria-label="Anterior"
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-brand-white/80 hover:bg-brand-white text-brand-black flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-brand-white/90 hover:bg-brand-white text-brand-black flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20 cursor-pointer"
             >
               <ChevronLeft size={18} />
             </button>
@@ -112,7 +219,7 @@ export function ProductGallery({
               type="button"
               onClick={handleNext}
               aria-label="Siguiente"
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-brand-white/80 hover:bg-brand-white text-brand-black flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-brand-white/90 hover:bg-brand-white text-brand-black flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20 cursor-pointer"
             >
               <ChevronRight size={18} />
             </button>
@@ -135,7 +242,7 @@ export function ProductGallery({
                 aria-label={`Seleccionar medio ${idx + 1}`}
                 className={`relative aspect-[4/5] border overflow-hidden transition-all cursor-pointer ${
                   isSelected
-                    ? "border-brand-black ring-2 ring-brand-black/30 scale-[1.02]"
+                    ? "border-brand-black ring-2 ring-brand-black/40 scale-[1.02]"
                     : "border-brand-border opacity-70 hover:opacity-100"
                 }`}
               >
@@ -143,7 +250,7 @@ export function ProductGallery({
                   <div className="w-full h-full bg-neutral-900 flex items-center justify-center text-white relative">
                     <video
                       src={mediaUrl}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover pointer-events-none"
                       muted
                       playsInline
                     />

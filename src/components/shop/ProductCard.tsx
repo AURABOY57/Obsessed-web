@@ -73,7 +73,9 @@ export function ProductCard({ product }: ProductCardProps) {
                   loop
                   muted
                   playsInline
-                  className="w-full h-full object-cover"
+                  disablePictureInPicture
+                  controlsList="nodownload nofullscreen noremoteplayback"
+                  className="w-full h-full object-cover pointer-events-none"
                 />
               ) : (
                 <Image
@@ -97,7 +99,9 @@ export function ProductCard({ product }: ProductCardProps) {
                     loop
                     muted
                     playsInline
-                    className="w-full h-full object-cover"
+                    disablePictureInPicture
+                    controlsList="nodownload nofullscreen noremoteplayback"
+                    className="w-full h-full object-cover pointer-events-none"
                   />
                 ) : (
                   <Image
