@@ -80,6 +80,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
         stock: p.stock,
         imageUrl: p.imageUrl,
         isActive: p.isActive,
+        isFeatured: p.isFeatured,
         category: p.category,
         subCategory: p.subCategory,
         variants: p.variants,

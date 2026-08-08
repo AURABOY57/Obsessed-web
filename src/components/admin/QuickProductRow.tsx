@@ -83,6 +83,12 @@ export function QuickProductRow({
     await toggleProductStatusAction(product.id, isActive);
   };
 
+  const handleToggleFeatured = async () => {
+    const nextVal = !isFeatured;
+    setIsFeatured(nextVal);
+    await toggleFeaturedProductAction(product.id, isFeatured);
+  };
+
   const handleDelete = async () => {
     if (confirm(`¿Eliminar definitivamente "${product.name}"?`)) {
       setIsDeleted(true);
@@ -155,6 +161,11 @@ export function QuickProductRow({
             <Badge variant={isActive ? "active" : "inactive"}>
               {isActive ? "Activo" : "Oculto"}
             </Badge>
+            {isFeatured && (
+              <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-mono font-bold px-1.5 py-0.2 tracking-wider flex items-center gap-1">
+                ⭐ DESTACADO EN INICIO
+              </span>
+            )}
             {isOfferActive && (
               <span className="bg-amber-500 text-black text-[9px] font-mono font-bold px-1.5 py-0.2 tracking-wider">
                 🔥 {product.offerLabel || "OFERTA"}
@@ -239,8 +250,19 @@ export function QuickProductRow({
           )}
         </div>
 
-        {/* Acciones de Ocultar, Editar y Eliminar */}
+        {/* Acciones de Destacado, Ocultar, Editar y Eliminar */}
         <div className="flex items-center gap-1 border-l border-brand-border pl-2">
+          <button
+            onClick={handleToggleFeatured}
+            title={isFeatured ? "Quitar de Piezas Destacadas del Inicio" : "Marcar como Pieza Destacada del Inicio (Máx 4)"}
+            className={`p-1.5 transition-colors cursor-pointer ${
+              isFeatured
+                ? "text-amber-500 hover:text-amber-600"
+                : "text-neutral-400 hover:text-amber-500"
+            }`}
+          >
+            <Star size={15} className={isFeatured ? "fill-amber-400 text-amber-500" : ""} />
+          </button>
           <Link
             href={`/admin/productos/editar/${product.id}`}
             title="Editar producto completo"

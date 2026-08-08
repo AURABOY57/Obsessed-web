@@ -31,6 +31,7 @@ interface ProductFormProps {
     imageUrl: string;
     images?: string[];
     isActive: boolean;
+    isFeatured?: boolean;
   };
 }
 
@@ -81,6 +82,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
   });
 
   const [isActive, setIsActive] = useState(initialData?.isActive ?? true);
+  const [isFeatured, setIsFeatured] = useState(initialData?.isFeatured ?? false);
 
   // Variantes
   const [variants, setVariants] = useState<ProductVariantItem[]>(() => {
@@ -160,6 +162,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
       imageUrl: mainImageUrl,
       images: mediaList,
       isActive,
+      isFeatured,
     };
 
     const response = isEditing && initialData
@@ -491,18 +494,34 @@ export function ProductForm({ initialData }: ProductFormProps) {
         </div>
 
         {/* Visibilidad Activo / Inactivo */}
-        <div className="flex items-center gap-3 pt-2">
-          <input
-            type="checkbox"
-            id="isActive"
-            checked={isActive}
-            onChange={(e) => setIsActive(e.target.checked)}
-            disabled={isLoading}
-            className="w-4 h-4 accent-black border-brand-border cursor-pointer"
-          />
-          <label htmlFor="isActive" className="text-xs font-mono uppercase tracking-wider text-brand-black cursor-pointer">
-            Producto visible en la tienda pública
-          </label>
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="isActive"
+              checked={isActive}
+              onChange={(e) => setIsActive(e.target.checked)}
+              disabled={isLoading}
+              className="w-4 h-4 accent-black border-brand-border cursor-pointer"
+            />
+            <label htmlFor="isActive" className="text-xs font-mono uppercase tracking-wider text-brand-black cursor-pointer">
+              Producto visible en la tienda pública
+            </label>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="isFeatured"
+              checked={isFeatured}
+              onChange={(e) => setIsFeatured(e.target.checked)}
+              disabled={isLoading}
+              className="w-4 h-4 accent-black border-brand-border cursor-pointer"
+            />
+            <label htmlFor="isFeatured" className="text-xs font-mono uppercase tracking-wider text-brand-black cursor-pointer flex items-center gap-1.5">
+              <span>⭐ Mostrar en "Piezas Destacadas" del Inicio (Máx 4 en la portada)</span>
+            </label>
+          </div>
         </div>
       </div>
 

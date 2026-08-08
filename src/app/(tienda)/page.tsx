@@ -12,6 +12,10 @@ interface HomeProduct {
   name: string;
   slug: string;
   price: number;
+  originalPrice?: number | null;
+  offerPrice?: number | null;
+  offerEndsAt?: string | null;
+  offerLabel?: string | null;
   stock: number;
   imageUrl: string;
   images?: string[];
@@ -19,7 +23,7 @@ interface HomeProduct {
   subCategory?: string | null;
 }
 
-// Datos de demostración de alta calidad en caso de base de datos vacía
+// Datos de demostración de alta calidad en caso de base de datos vacía (4 productos destacados)
 const DEMO_PRODUCTS: HomeProduct[] = [
   {
     id: "demo-1",
@@ -67,17 +71,42 @@ export default async function StoreHomePage() {
   let products: HomeProduct[] = DEMO_PRODUCTS;
 
   try {
-    const dbProducts = await prisma.product.findMany({
-      where: { isActive: true },
-      orderBy: { createdAt: "desc" },
+    // 1. Obtener productos activos marcados como destacados (isFeatured = true)
+    const featuredProducts = await prisma.product.findMany({
+      where: { isActive: true, isFeatured: true },
+      orderBy: { updatedAt: "desc" },
+      take: 4,
     });
 
-    if (dbProducts.length > 0) {
-      products = dbProducts.map((p) => ({
+    let selectedDbProducts = [...featuredProducts];
+
+    // 2. Si hay menos de 4 destacados elegidos en admin, completar con los más recientes activos
+    if (selectedDbProducts.length < 4) {
+      const needed = 4 - selectedDbProducts.length;
+      const excludeIds = selectedDbProducts.map((p) => p.id);
+
+      const extraProducts = await prisma.product.findMany({
+        where: {
+          isActive: true,
+          id: { notIn: excludeIds },
+        },
+        orderBy: { createdAt: "desc" },
+        take: needed,
+      });
+
+      selectedDbProducts = [...selectedDbProducts, ...extraProducts];
+    }
+
+    if (selectedDbProducts.length > 0) {
+      products = selectedDbProducts.slice(0, 4).map((p) => ({
         id: p.id,
         name: p.name,
         slug: p.slug,
         price: Number(p.price),
+        originalPrice: p.originalPrice ? Number(p.originalPrice) : null,
+        offerPrice: p.offerPrice ? Number(p.offerPrice) : null,
+        offerEndsAt: p.offerEndsAt ? p.offerEndsAt.toISOString() : null,
+        offerLabel: p.offerLabel,
         stock: p.stock,
         imageUrl: p.imageUrl,
         images: p.images,

@@ -18,6 +18,7 @@ export interface InventoryProduct {
   stock: number;
   imageUrl: string;
   isActive: boolean;
+  isFeatured?: boolean;
   category?: string | null;
   subCategory?: string | null;
   variants?: any;
@@ -28,7 +29,7 @@ interface ProductInventoryViewProps {
   initialFilter?: string;
 }
 
-const CATEGORIES = ["TODOS", "Mates", "Bombillas", "Yerbas", "Termos", "Accesorios", "STOCK BAJO (< 2)"];
+const CATEGORIES = ["TODOS", "⭐ DESTACADOS (INICIO)", "Mates", "Bombillas", "Yerbas", "Termos", "Accesorios", "STOCK BAJO (< 2)"];
 
 const SUBFILTERS_BY_CATEGORY: Record<string, string[]> = {
   Mates: ["Todos los mates", "Calabaza", "Madera", "Acero", "Cerámica", "Imperial", "Torpedo", "Camionero"],
@@ -40,7 +41,11 @@ const SUBFILTERS_BY_CATEGORY: Record<string, string[]> = {
 export function ProductInventoryView({ initialProducts, initialFilter }: ProductInventoryViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>(
-    initialFilter === "low-stock" ? "STOCK BAJO (< 2)" : "TODOS"
+    initialFilter === "low-stock"
+      ? "STOCK BAJO (< 2)"
+      : initialFilter === "featured"
+      ? "⭐ DESTACADOS (INICIO)"
+      : "TODOS"
   );
   const [selectedSubfilter, setSelectedSubfilter] = useState<string>("TODOS");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -49,6 +54,7 @@ export function ProductInventoryView({ initialProducts, initialFilter }: Product
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {
       TODOS: initialProducts.length,
+      "⭐ DESTACADOS (INICIO)": initialProducts.filter((p) => p.isFeatured).length,
       "STOCK BAJO (< 2)": initialProducts.filter((p) => p.stock < 2).length,
     };
 
@@ -66,6 +72,8 @@ export function ProductInventoryView({ initialProducts, initialFilter }: Product
       // 1. Filtro por categoría principal
       if (selectedCategory === "STOCK BAJO (< 2)") {
         if (product.stock >= 2) return false;
+      } else if (selectedCategory === "⭐ DESTACADOS (INICIO)") {
+        if (!product.isFeatured) return false;
       } else if (selectedCategory !== "TODOS") {
         if (product.category?.toLowerCase() !== selectedCategory.toLowerCase()) {
           return false;
