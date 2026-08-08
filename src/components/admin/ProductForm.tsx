@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createProductAction, updateProductAction } from "@/actions/product-actions";
-import { ImageUpload } from "@/components/admin/ImageUpload";
+import { MultiMediaUpload } from "@/components/admin/MultiMediaUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Sparkles, Layers } from "lucide-react";
@@ -29,15 +29,16 @@ interface ProductFormProps {
     stock: number;
     variants?: any;
     imageUrl: string;
+    images?: string[];
     isActive: boolean;
   };
 }
 
 const CATEGORY_SUGGESTIONS: Record<string, string[]> = {
-  Mates: ["Imperial", "Torpedo", "Camionero", "Calabaza", "Madera", "Acero", "Cerámica"],
+  Mates: ["Imperial", "Torpedo", "Camionero", "Madera", "Acero", "Cerámica"],
   Bombillas: ["Alpaca Cincelada", "Alpaca Lisa", "Pico de Loro", "Acero Inoxidable", "Resorte"],
   Yerbas: ["Con Palo", "Despalada", "Compuesta", "Barbacuá", "Orgánica"],
-  Termos: ["Acero Inox 1L", "Pico Cebador", "Media Manija", "Obsidian Matte"],
+  Termos: ["Acero Inox 1L", "Pico Cebador", "Media Manija"],
   Accesorios: ["Matera de Cuero", "Cuchillo Criollo", "Porta Termo", "Limpiador"],
 };
 
@@ -67,7 +68,18 @@ export function ProductForm({ initialData }: ProductFormProps) {
   const [offerLabel, setOfferLabel] = useState(initialData?.offerLabel || "OFERTA");
   const [costPrice, setCostPrice] = useState(initialData?.costPrice ? String(initialData.costPrice) : "");
   const [stock, setStock] = useState(initialData?.stock !== undefined ? String(initialData.stock) : "5");
-  const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || "");
+  
+  // Lista de Medios (Hasta 5 fotos o videos)
+  const [mediaList, setMediaList] = useState<string[]>(() => {
+    if (initialData?.images && Array.isArray(initialData.images) && initialData.images.length > 0) {
+      return initialData.images.slice(0, 5);
+    }
+    if (initialData?.imageUrl) {
+      return [initialData.imageUrl];
+    }
+    return [];
+  });
+
   const [isActive, setIsActive] = useState(initialData?.isActive ?? true);
 
   // Variantes
@@ -124,11 +136,13 @@ export function ProductForm({ initialData }: ProductFormProps) {
     setErrorMessage(null);
     setFieldErrors(null);
 
-    if (!imageUrl) {
-      setErrorMessage("Por favor selecciona o sube una fotografía del producto.");
+    if (mediaList.length === 0) {
+      setErrorMessage("Por favor agrega al menos una foto o video del producto (Portada).");
       setIsLoading(false);
       return;
     }
+
+    const mainImageUrl = mediaList[0];
 
     const payload = {
       name,
@@ -143,8 +157,8 @@ export function ProductForm({ initialData }: ProductFormProps) {
       costPrice: costPrice ? Number(costPrice) : null,
       stock: Number(stock),
       variants: variants.filter((v) => v.name.trim() && v.options.length > 0),
-      imageUrl,
-      images: [imageUrl],
+      imageUrl: mainImageUrl,
+      images: mediaList,
       isActive,
     };
 
@@ -165,19 +179,19 @@ export function ProductForm({ initialData }: ProductFormProps) {
   const availableSubcategories = CATEGORY_SUGGESTIONS[category] || [];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
       {errorMessage && (
         <div className="p-3 border border-red-500 bg-red-50 text-red-700 text-xs font-mono">
           {errorMessage}
         </div>
       )}
 
-      {/* Subida de Imagen */}
-      <ImageUpload
-        value={imageUrl}
-        onChange={(url) => setImageUrl(url)}
+      {/* Subida Multimedia (Hasta 5 Fotos y Videos) */}
+      <MultiMediaUpload
+        mediaList={mediaList}
+        onChange={setMediaList}
         disabled={isLoading}
-        label="Fotografía Principal *"
+        maxItems={5}
       />
       {fieldErrors?.imageUrl && (
         <p className="text-xs font-mono text-red-600">{fieldErrors.imageUrl[0]}</p>

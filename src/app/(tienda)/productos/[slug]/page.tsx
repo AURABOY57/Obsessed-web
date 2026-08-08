@@ -5,8 +5,9 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
 import { ProductPurchaseSection } from "@/components/shop/ProductPurchaseSection";
+import { ProductGallery } from "@/components/shop/ProductGallery";
 import { OfferCountdown } from "@/components/shop/OfferCountdown";
-import { ArrowLeft, ShieldCheck, Truck, MessageCircle, Flame } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Truck, MessageCircle } from "lucide-react";
 
 interface ProductPageProps {
   params: Promise<{
@@ -150,24 +151,15 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-        {/* Columna Izquierda: Fotografía */}
+        {/* Columna Izquierda: Galería Multimedia (Fotos y Videos) */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="relative w-full aspect-[4/5] border border-brand-border bg-brand-surface overflow-hidden">
-            <Image
-              src={product.imageUrl}
-              alt={product.name}
-              fill
-              unoptimized
-              priority
-              className="object-cover"
-            />
-            {isOfferActive && (
-              <div className="absolute top-4 right-4 bg-amber-500 text-black text-xs font-mono font-bold uppercase tracking-wider px-3 py-1 flex items-center gap-1.5 shadow-md">
-                <Flame size={14} />
-                <span>{product.offerLabel || "OFERTA"}</span>
-              </div>
-            )}
-          </div>
+          <ProductGallery
+            productName={product.name}
+            imageUrl={product.imageUrl}
+            images={product.images}
+            isOfferActive={isOfferActive}
+            offerLabel={product.offerLabel}
+          />
         </div>
 
         {/* Columna Derecha: Información & Compra */}

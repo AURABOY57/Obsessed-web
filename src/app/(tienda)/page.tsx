@@ -14,6 +14,7 @@ interface HomeProduct {
   price: number;
   stock: number;
   imageUrl: string;
+  images?: string[];
   category: string;
   subCategory?: string | null;
 }
@@ -79,6 +80,7 @@ export default async function StoreHomePage() {
         price: Number(p.price),
         stock: p.stock,
         imageUrl: p.imageUrl,
+        images: p.images,
         category: p.category || "Mates",
         subCategory: p.subCategory || null,
       }));

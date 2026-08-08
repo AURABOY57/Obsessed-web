@@ -24,6 +24,7 @@ export interface ProductItem {
   offerLabel?: string | null;
   stock: number;
   imageUrl: string;
+  images?: string[];
   category?: string | null;
   subCategory?: string | null;
 }

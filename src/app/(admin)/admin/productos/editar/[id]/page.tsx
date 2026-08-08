@@ -39,6 +39,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         stock: dbProduct.stock,
         variants: dbProduct.variants,
         imageUrl: dbProduct.imageUrl,
+        images: dbProduct.images && dbProduct.images.length > 0 ? dbProduct.images : (dbProduct.imageUrl ? [dbProduct.imageUrl] : []),
         isActive: dbProduct.isActive,
       };
     }

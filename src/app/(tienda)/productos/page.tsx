@@ -73,6 +73,7 @@ export default async function ProductsCatalogPage() {
         offerLabel: p.offerLabel,
         stock: p.stock,
         imageUrl: p.imageUrl,
+        images: p.images,
         category: p.category || "Mates",
         subCategory: p.subCategory || null,
       }));
