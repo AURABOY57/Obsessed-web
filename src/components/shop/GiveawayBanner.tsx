@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import { Gift, Radio, ExternalLink, Sparkles, Trophy, ArrowRight, MessageCircle } from "lucide-react";
+import { Gift, Radio, ExternalLink, Trophy, ArrowRight, MessageCircle } from "lucide-react";
 
 interface GiveawayBannerProps {
   whatsappPhone?: string;
@@ -38,11 +38,6 @@ export function GiveawayBanner({ whatsappPhone = "5493548550965" }: GiveawayBann
                 obsessed x @nnanoide
               </div>
             </div>
-
-            <span className="text-[10px] font-mono uppercase tracking-wider text-brand-muted mt-2.5 flex items-center gap-1.5">
-              <Sparkles size={11} className="text-amber-500" />
-              <span>Flyer oficial • Sorteo Imperial de Algarrobo</span>
-            </span>
           </div>
 
           {/* Columna Derecha: Información y Acciones con la paleta de Inicio */}
