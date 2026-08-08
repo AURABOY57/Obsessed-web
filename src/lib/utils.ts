@@ -52,3 +52,20 @@ export function buildWhatsAppLink({
 
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
+
+export function buildStockInquiryWhatsAppLink({
+  phone,
+  productName,
+  variantName,
+}: {
+  phone: string;
+  productName: string;
+  variantName?: string;
+}): string {
+  const cleanPhone = phone.replace(/[^0-9]/g, "");
+  const variantText = variantName ? ` (${variantName})` : "";
+  const message = `Hola *obsessed.cba*! 👋\n\nVi el producto *${productName}*${variantText} en la tienda y figura sin stock.\n\n¿Podrían indicarme cuándo vuelve a ingresar o si se puede encargar? ¡Muchas gracias!`;
+
+  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+}
+

@@ -194,18 +194,29 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        {/* Acciones Rápidas (Carrito + WhatsApp) */}
-        <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 border-t border-brand-border">
-          <AddToCartButton
-            product={product}
-            variant="outline"
-            className="w-full text-[10px] py-2"
-          />
-          <DirectWhatsAppButton
-            product={product}
-            label="Pedir"
-            className="w-full text-[10px] py-2"
-          />
+        {/* Acciones Rápidas (Carrito + WhatsApp / Consultar Stock) */}
+        <div className="pt-2 border-t border-brand-border">
+          {isOutOfStock ? (
+            <DirectWhatsAppButton
+              product={product}
+              isOutOfStock={true}
+              label="Consultar Próximo Ingreso"
+              className="w-full text-[10px] py-2 bg-brand-surface text-brand-black border-brand-border hover:border-brand-black hover:bg-brand-black hover:text-brand-white"
+            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <AddToCartButton
+                product={product}
+                variant="outline"
+                className="w-full text-[10px] py-2"
+              />
+              <DirectWhatsAppButton
+                product={product}
+                label="Pedir"
+                className="w-full text-[10px] py-2"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

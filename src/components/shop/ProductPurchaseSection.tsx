@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { createOrderAction } from "@/actions/order-actions";
-import { buildWhatsAppLink } from "@/lib/utils";
-import { MessageCircle, ShoppingBag, Check } from "lucide-react";
+import { buildWhatsAppLink, buildStockInquiryWhatsAppLink } from "@/lib/utils";
+import { MessageCircle, ShoppingBag, Check, Clock } from "lucide-react";
 
 export interface ProductVariantData {
   name: string; // ej: "Tipo de Virola"
@@ -73,7 +73,19 @@ export function ProductPurchaseSection({ product }: ProductPurchaseSectionProps)
   };
 
   const handleDirectWhatsApp = async () => {
-    if (isOutOfStock) return;
+    const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "5493548550965";
+
+    // Si no hay stock, abre consulta directa de reposición / encargo
+    if (isOutOfStock) {
+      const url = buildStockInquiryWhatsAppLink({
+        phone,
+        productName: product.name,
+        variantName: selectedVariantString || undefined,
+      });
+      window.open(url, "_blank");
+      return;
+    }
+
     setIsProcessing(true);
     let orderNumber: string | undefined = undefined;
 
@@ -103,7 +115,6 @@ export function ProductPurchaseSection({ product }: ProductPurchaseSectionProps)
       setIsProcessing(false);
     }
 
-    const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "5493548550965";
     const url = buildWhatsAppLink({
       phone,
       products: [
@@ -155,15 +166,34 @@ export function ProductPurchaseSection({ product }: ProductPurchaseSectionProps)
         </div>
       )}
 
+      {/* Aviso informativo si no hay stock */}
+      {isOutOfStock && (
+        <div className="p-3.5 bg-brand-surface border border-brand-border space-y-1">
+          <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-brand-black">
+            <Clock size={14} className="text-amber-500" />
+            <span>Sin Stock Inmediato</span>
+          </div>
+          <p className="text-[11px] font-mono text-brand-muted leading-relaxed">
+            Podés consultar cuándo vuelve a ingresar este modelo o coordinar un encargo personalizado por WhatsApp con el taller.
+          </p>
+        </div>
+      )}
+
       {/* Botones de Acción */}
-      <div className="space-y-3 pt-2">
+      <div className="space-y-3 pt-1">
         <button
           onClick={handleDirectWhatsApp}
-          disabled={isOutOfStock || isProcessing}
-          className="w-full h-12 inline-flex items-center justify-center gap-2 border border-brand-black bg-brand-black text-brand-white px-4 py-2.5 text-xs font-mono uppercase tracking-widest hover:bg-neutral-900 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+          disabled={isProcessing}
+          className="w-full h-12 inline-flex items-center justify-center gap-2 border border-brand-black bg-brand-black text-brand-white px-4 py-2.5 text-xs font-mono uppercase tracking-widest hover:bg-neutral-900 transition-colors cursor-pointer shadow-xs"
         >
           <MessageCircle size={15} />
-          <span>{isProcessing ? "Generando pedido..." : "Comprar directo por WhatsApp"}</span>
+          <span>
+            {isProcessing
+              ? "Generando pedido..."
+              : isOutOfStock
+              ? "Consultar Cuándo Ingresa / Encargar"
+              : "Comprar directo por WhatsApp"}
+          </span>
         </button>
 
         <button
@@ -177,7 +207,7 @@ export function ProductPurchaseSection({ product }: ProductPurchaseSectionProps)
               <span>Agregado al Carrito</span>
             </>
           ) : isOutOfStock ? (
-            <span>Sin Stock Disponible</span>
+            <span>Agotado para Carrito</span>
           ) : (
             <>
               <ShoppingBag size={15} />
