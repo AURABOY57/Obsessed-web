@@ -150,6 +150,10 @@ export async function createProductAction(
           category,
           subCategory: subCategory || null,
           price,
+          originalPrice: validated.data.originalPrice ?? null,
+          offerPrice: validated.data.offerPrice ?? null,
+          offerEndsAt: validated.data.offerEndsAt ? new Date(validated.data.offerEndsAt) : null,
+          offerLabel: validated.data.offerLabel ?? null,
           costPrice: costPrice ?? null,
           stock,
           variants: variants.length > 0 ? (variants as any) : undefined,
@@ -236,12 +240,19 @@ export async function updateProductAction(
     }
 
     try {
+      const updateData: any = { ...validated.data };
+      if (updateData.variants) {
+        updateData.variants = updateData.variants as any;
+      }
+      if (updateData.offerEndsAt) {
+        updateData.offerEndsAt = new Date(updateData.offerEndsAt);
+      } else if (updateData.offerEndsAt === null) {
+        updateData.offerEndsAt = null;
+      }
+
       const updated = await prisma.product.update({
         where: { id },
-        data: {
-          ...validated.data,
-          variants: validated.data.variants ? (validated.data.variants as any) : undefined,
-        },
+        data: updateData,
       });
 
       revalidatePath("/", "layout");
