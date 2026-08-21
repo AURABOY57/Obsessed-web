@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/shop/ProductCard";
-import { GiveawayBanner } from "@/components/shop/GiveawayBanner";
+
 import { ArrowDown, MessageCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -201,8 +201,6 @@ export default async function StoreHomePage() {
         </div>
       </section>
 
-      {/* Apartado Especial: Sorteo Imperial de Algarrobo con @nnanoide */}
-      <GiveawayBanner whatsappPhone={phone} />
 
       {/* Filosofía del Mate y la Marca */}
       <section id="about" className="border-y border-brand-border bg-brand-surface py-16 px-4 sm:px-6">
